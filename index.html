@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>매왕길드</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d0f14;--s1:#141720;--s2:#1c2030;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);
+  --text:#dde1ed;--t2:#8490aa;--t3:#4a5268;
+  --blue:#5b8af5;--blue2:#3d6be0;
+  --green:#3ecf8e;--red:#f06565;--gold:#f5c842;--purple:#9b7ff5;--teal:#2dd4bf;
+  --green-bg:rgba(62,207,142,0.08);--red-bg:rgba(240,101,101,0.08);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-serif;min-height:100vh}
+
+.nav{background:var(--s1);border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;height:52px;position:sticky;top:0;z-index:50;gap:4px}
+.nav-logo{font-family:'Noto Sans KR',sans-serif;font-size:15px;font-weight:700;color:#fff;margin-right:20px;white-space:nowrap}
+.nav-tab{height:52px;padding:0 14px;display:flex;align-items:center;font-size:13px;color:var(--t2);border:none;background:none;cursor:pointer;font-family:'Noto Sans KR',sans-serif;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap}
+.nav-tab:hover{color:var(--text)}
+.nav-tab.on{color:var(--blue);border-bottom-color:var(--blue)}
+
+.page{display:none;padding:24px;max-width:900px;margin:0 auto}
+.page.on{display:block}
+
+/* 대결 버튼 바 */
+.battle-bar-wrap{overflow-x:auto;margin-bottom:22px;padding-bottom:2px}
+.battle-bar{display:flex;gap:8px;width:max-content}
+.battle-btn{
+  height:36px;padding:0 16px;
+  background:var(--s1);border:1px solid var(--border2);
+  color:var(--t2);border-radius:8px;
+  font-size:13px;font-family:'Noto Sans KR',sans-serif;
+  cursor:pointer;transition:all .15s;white-space:nowrap;
+  display:flex;align-items:center;gap:6px
+}
+.battle-btn:hover{border-color:var(--blue);color:var(--text)}
+.battle-btn.on{background:var(--blue);border-color:var(--blue);color:#fff}
+.btag{font-size:10px;padding:2px 7px;border-radius:12px;font-weight:500}
+.btag-tobul{background:rgba(155,127,245,.2);color:var(--purple)}
+.btag-daehang{background:rgba(45,212,191,.15);color:var(--teal)}
+.battle-btn.on .btag-tobul,.battle-btn.on .btag-daehang{background:rgba(255,255,255,.2);color:#fff}
+.btn-add-battle{border-style:dashed;color:var(--t3)}
+.btn-add-battle:hover{color:var(--text);border-color:var(--border2)}
+
+/* 요약 칩 */
+.summary-row{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap}
+.chip{background:var(--s1);border:1px solid var(--border);border-radius:10px;padding:11px 16px;min-width:100px}
+.chip-label{font-size:11px;color:var(--t3);margin-bottom:5px}
+.chip-val{font-family:'Noto Sans KR',sans-serif;font-size:20px;font-weight:700}
+
+/* 결과 테이블 */
+.result-panel{background:var(--s1);border:1px solid var(--border);border-radius:13px;overflow:hidden}
+.rp-head{padding:13px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.rp-title{font-size:14px;font-weight:500;display:flex;align-items:center;gap:8px}
+.tag{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:500}
+.tag-tobul{background:rgba(155,127,245,.15);color:var(--purple);border:1px solid rgba(155,127,245,.28)}
+.tag-daehang{background:rgba(45,212,191,.12);color:var(--teal);border:1px solid rgba(45,212,191,.28)}
+
+.row-head{display:grid;grid-template-columns:58px 52px 1fr 64px 70px;padding:9px 18px;font-size:11px;color:var(--t3);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)}
+.row{display:grid;grid-template-columns:58px 52px 1fr 64px 70px;border-bottom:1px solid var(--border);transition:background .1s}
+.row:last-child{border-bottom:none}
+.row:hover{filter:brightness(1.12)}
+.row.rpos{background:var(--green-bg);border-left:3px solid var(--green)}
+.row.rneg{background:var(--red-bg);border-left:3px solid var(--red)}
+.row.rzero{border-left:3px solid transparent}
+.cell{padding:11px 18px;display:flex;align-items:center;font-size:13px}
+.cell:first-child{padding-left:15px}
+.cn{font-family:'Noto Sans KR',sans-serif;font-size:12px;color:var(--t3)}
+.cr{font-family:'Noto Sans KR',sans-serif;font-size:13px;font-weight:700;color:var(--t2)}
+.cr.top3{color:var(--gold)}
+.cdiff{font-size:11px;font-family:'Space Grotesk',sans-serif}
+.cscore{justify-content:flex-end}
+.sv{font-family:'Noto Sans KR',sans-serif;font-size:16px;font-weight:700}
+.sv.pos{color:var(--green)}.sv.neg{color:var(--red)}.sv.zero{color:var(--t3)}
+
+/* 공통 버튼 */
+.btn{background:var(--s2);border:1px solid var(--border2);color:var(--text);padding:7px 14px;border-radius:8px;font-size:13px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:all .15s}
+.btn:hover{border-color:var(--blue);color:var(--blue)}
+.btn-prim{background:var(--blue);border-color:var(--blue);color:#fff}
+.btn-prim:hover{background:var(--blue2);border-color:var(--blue2);color:#fff}
+.btn-sm{padding:5px 11px;font-size:12px}
+.btn-danger{border-color:rgba(240,101,101,.35);color:var(--red)}
+.btn-danger:hover{background:rgba(240,101,101,.1);border-color:var(--red)}
+.sec-title{font-size:13px;color:var(--t2);margin-bottom:14px;display:flex;align-items:center;gap:7px}
+.sec-title::before{content:'';width:3px;height:13px;background:var(--blue);border-radius:2px;display:block}
+
+/* 입력 페이지 */
+.battle-grid{display:flex;flex-direction:column;gap:12px}
+.battle-panel{background:var(--s1);border:1px solid var(--border);border-radius:13px;overflow:hidden}
+.panel-head{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none}
+.panel-head:hover{background:rgba(255,255,255,0.02)}
+.panel-head-title{font-size:13px;font-weight:500;display:flex;align-items:center;gap:7px}
+.panel-head-left{display:flex;align-items:center;gap:8px;flex:1}
+.collapse-arrow{font-size:11px;color:var(--t3);transition:transform .2s}
+.battle-panel.collapsed .collapse-arrow{transform:rotate(-90deg)}
+.battle-panel.collapsed .slots{display:none}
+.battle-panel.collapsed .panel-head{border-bottom:none}
+.slots{padding:6px 10px}
+.slot{display:flex;align-items:center;gap:9px;padding:6px 8px;border-radius:7px;cursor:pointer;transition:background .1s;border:1px solid transparent;margin-bottom:2px}
+.slot:hover{background:var(--s2);border-color:var(--border)}
+.slot.filled:hover{border-color:var(--blue)}
+.snum{font-family:'Noto Sans KR',sans-serif;font-size:11px;font-weight:700;color:var(--t3);width:20px;text-align:right;flex-shrink:0}
+.snum.top3{color:var(--gold)}
+.sname{font-size:13px;flex:1}
+.sempty{font-size:12px;color:var(--t3)}
+.sscore{font-family:'Noto Sans KR',sans-serif;font-size:12px;font-weight:700;margin-left:auto;flex-shrink:0}
+.sscore.pos{color:var(--green)}.sscore.neg{color:var(--red)}.sscore.zero{color:var(--t3)}
+.sclear{background:none;border:none;color:var(--t3);cursor:pointer;font-size:13px;padding:0 2px;flex-shrink:0}
+.sclear:hover{color:var(--red)}
+
+/* 대결 추가 폼 */
+.add-form{background:var(--s1);border:1px solid var(--border);border-radius:11px;padding:18px;margin-bottom:18px;display:none}
+.add-form.open{display:block}
+.form-row{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+.fg{display:flex;flex-direction:column;gap:5px}
+.flabel{font-size:12px;color:var(--t2)}
+.finput,.fsel{background:var(--s2);border:1px solid var(--border2);color:var(--text);padding:7px 12px;border-radius:8px;font-size:13px;font-family:'Noto Sans KR',sans-serif;outline:none}
+.finput:focus,.fsel:focus{border-color:var(--blue)}
+.fsel option{background:#1c2030}
+
+/* 모달 */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:200;display:none;align-items:center;justify-content:center}
+.modal-bg.open{display:flex}
+.modal{background:var(--s1);border:1px solid var(--border2);border-radius:15px;width:320px;max-height:76vh;display:flex;flex-direction:column}
+.modal-head{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.modal-title{font-size:14px;font-weight:500}
+.modal-close{background:none;border:none;color:var(--t2);cursor:pointer;font-size:19px;line-height:1}
+.modal-search{padding:9px 14px;border-bottom:1px solid var(--border)}
+.modal-search input{width:100%;background:var(--s2);border:1px solid var(--border2);color:var(--text);padding:7px 11px;border-radius:7px;font-size:13px;font-family:'Noto Sans KR',sans-serif;outline:none}
+.modal-list{overflow-y:auto;flex:1;padding:6px}
+.mitem{display:flex;align-items:center;gap:9px;padding:8px 11px;border-radius:8px;cursor:pointer;transition:background .1s}
+.mitem:hover{background:var(--s2)}
+.mitem.used{opacity:.28;pointer-events:none}
+.mitem.sel{background:rgba(91,138,245,.15)}
+.mrank{font-size:11px;color:var(--t3);width:32px;font-family:'Space Grotesk',sans-serif}
+.mname{font-size:14px;flex:1}
+
+/* 멤버 관리 */
+.member-table{background:var(--s1);border:1px solid var(--border);border-radius:13px;overflow:hidden}
+.mt-head,.mt-row{display:grid;grid-template-columns:56px 1fr 160px;align-items:center;padding:10px 16px;gap:10px}
+.mt-head{font-size:11px;color:var(--t3);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)}
+.mt-row{border-bottom:1px solid var(--border);transition:background .1s}
+.mt-row:last-child{border-bottom:none}
+.mt-row:hover{background:var(--s2)}
+.name-edit{background:transparent;border:none;color:var(--text);font-size:14px;font-family:'Noto Sans KR',sans-serif;width:100%;outline:none}
+
+/* 달력 모달 */
+.cal-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:300;display:none;align-items:center;justify-content:center}
+.cal-modal-bg.open{display:flex}
+.cal-box{background:var(--s1);border:1px solid var(--border2);border-radius:16px;width:300px;padding:20px}
+.cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.cal-title{font-size:15px;font-weight:600;font-family:"Space Grotesk",sans-serif}
+.cal-nav{background:none;border:none;color:var(--t2);cursor:pointer;font-size:18px;padding:4px 8px;border-radius:6px;line-height:1}
+.cal-nav:hover{background:var(--s2);color:var(--text)}
+.cal-weekdays{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:6px}
+.cal-wd{text-align:center;font-size:11px;color:var(--t3);padding:4px 0}
+.cal-days{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.cal-day{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:8px;font-size:13px;cursor:pointer;font-family:"Noto Sans KR",sans-serif;border:none;background:none;color:var(--text);transition:background .1s}
+.cal-day:hover{background:var(--s2)}
+.cal-day.today{border:1px solid var(--blue);color:var(--blue)}
+.cal-day.selected{background:var(--blue);color:#fff}
+.cal-day.empty{cursor:default}
+.cal-type-row{display:flex;gap:8px;margin-top:16px;margin-bottom:16px}
+.cal-type-btn{flex:1;padding:9px;border-radius:9px;border:1px solid var(--border2);background:var(--s2);color:var(--t2);font-size:13px;font-family:"Noto Sans KR",sans-serif;cursor:pointer;transition:all .15s;font-weight:500}
+.cal-type-btn:hover{border-color:var(--blue);color:var(--text)}
+.cal-type-btn.on{background:var(--blue);border-color:var(--blue);color:#fff}
+.cal-confirm{width:100%;padding:10px;border-radius:9px;background:var(--blue);border:none;color:#fff;font-size:14px;font-family:"Noto Sans KR",sans-serif;cursor:pointer;font-weight:500}
+.cal-confirm:hover{background:var(--blue2)}
+
+/* 토스트 */
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(14px);background:var(--green);color:#061a0e;padding:10px 20px;border-radius:9px;font-weight:500;font-size:13px;opacity:0;transition:all .22s;z-index:999;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+@media(max-width:640px){
+  .page{padding:14px}
+  .battle-grid{grid-template-columns:1fr}
+  .row-head,.row{grid-template-columns:50px 44px 1fr 60px}
+  .hide-m{display:none}
+  .mt-head,.mt-row{grid-template-columns:44px 1fr auto}
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-logo">🩷 매왕길드</div>
+  <button class="nav-tab on" onclick="goPage('dashboard')">📊 현황판</button>
+  <button class="nav-tab" onclick="goPage('entry')">✏️ 결과 입력</button>
+  <button class="nav-tab" onclick="goPage('members')">👥 길드원</button>
+</nav>
+
+<div id="page-dashboard" class="page on"></div>
+<div id="page-entry" class="page"></div>
+<div id="page-members" class="page"></div>
+
+<div class="modal-bg" id="modal-bg" onclick="bgClick(event)">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title" id="modal-title">길드원 선택</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-search"><input type="text" id="modal-search" placeholder="이름 검색..." oninput="renderModalList()"></div>
+    <div class="modal-list" id="modal-list"></div>
+  </div>
+</div>
+
+<!-- 달력 모달 -->
+<div class="cal-modal-bg" id="cal-modal-bg" onclick="calBgClick(event)">
+  <div class="cal-box">
+    <div class="cal-header">
+      <button class="cal-nav" onclick="calMove(-1)">&#8249;</button>
+      <div class="cal-title" id="cal-title"></div>
+      <button class="cal-nav" onclick="calMove(1)">&#8250;</button>
+    </div>
+    <div class="cal-weekdays">
+      <div class="cal-wd" style="color:#f06565">일</div>
+      <div class="cal-wd">월</div><div class="cal-wd">화</div><div class="cal-wd">수</div>
+      <div class="cal-wd">목</div><div class="cal-wd">금</div>
+      <div class="cal-wd" style="color:#5b8af5">토</div>
+    </div>
+    <div class="cal-days" id="cal-days"></div>
+    <div class="cal-type-row">
+      <button class="cal-type-btn on" id="cal-type-tobul" onclick="calSelType('토벌전')">토벌전</button>
+      <button class="cal-type-btn" id="cal-type-daehang" onclick="calSelType('대항전')">대항전</button>
+    </div>
+    <button class="cal-confirm" onclick="calConfirm()">추가</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- 길드원 추가 모달 -->
+<div class="modal-bg" id="addmember-bg" onclick="if(event.target===this)closeAddMember()">
+  <div class="modal" style="width:300px">
+    <div class="modal-head">
+      <div class="modal-title">길드원 추가</div>
+      <button class="modal-close" onclick="closeAddMember()">✕</button>
+    </div>
+    <div style="padding:16px 20px;display:flex;flex-direction:column;gap:12px">
+      <div class="fg">
+        <label class="flabel">닉네임</label>
+        <input class="finput" id="addm-name" placeholder="닉네임 입력" style="width:100%">
+      </div>
+      <div class="fg">
+        <label class="flabel">투력 순위 (몇 위로 추가할지)</label>
+        <input class="finput" id="addm-rank" type="number" placeholder="예: 5 → 5위로 삽입" min="1" style="width:100%">
+      </div>
+      <div style="font-size:11px;color:var(--t3)">순위 미입력 시 맨 마지막으로 추가됩니다.</div>
+    </div>
+    <div style="display:flex;gap:8px;padding:0 20px 18px;justify-content:flex-end">
+      <button class="btn btn-sm" onclick="closeAddMember()">취소</button>
+      <button class="btn btn-sm btn-prim" onclick="confirmAddMember()">추가</button>
+    </div>
+  </div>
+</div>
+
+<!-- 확인 모달 -->
+<div class="modal-bg" id="confirm-bg">
+  <div class="modal" style="width:300px">
+    <div class="modal-head" style="border-bottom:none;padding-bottom:4px">
+      <div class="modal-title">⚠️ 삭제 확인</div>
+    </div>
+    <div id="confirm-msg" style="padding:0 20px 16px;font-size:14px;color:var(--t2);line-height:1.6"></div>
+    <div style="display:flex;gap:8px;padding:0 20px 18px;justify-content:flex-end">
+      <button class="btn btn-sm" onclick="confirmCancel()">취소</button>
+      <button class="btn btn-sm btn-danger" onclick="confirmOk()">삭제</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+//  STATE  — 주차 개념 없음, battles 플랫 배열
+// ══════════════════════════════════════════════
+let S = {
+  members: [], // 투력순위 = 인덱스+1
+  battles: [], // [{id, date, type, result:[name|null x30]}]
+  currentId: null
+};
+
+function seed() {
+  S.members = ["도세준","제빙그켬","띵띵띵띵띵띵","동고둥이","제로v",
+    "짱득춘","혁빡","별샷","솔신","싫은디","낭심에한방","콩프리다용",
+    "암살도령","엔이티알","킴서현","G존더코","송이주","디듣","클로델","ilrain",
+    "레몬맛소다","네번째밤","쫜득쿠키","설탕우유","원일짱","킴쭈이",
+    "쑤수슈퍼노바","크롱v","댕그랑","지뚜야"];
+  S.battles = [
+    { id:'b1', date:'05/31', type:'토벌전', result:[
+      "도세준","제빙그켬","제로v","띵띵띵띵띵띵","동고둥이",
+      "혁빡","솔신","별샷","짱득춘","싫은디","암살도령","킴서현",
+      "ilrain","G존더코","콩프리다용","낭심에한방","엔이티알","네번째밤",
+      "송이주","클로델","레몬맛소다","원일짱","쫜득쿠키","디듣","설탕우유",
+      "킴쭈이","댕그랑","지뚜야","크롱v","쑤수슈퍼노바"
+    ]},
+    { id:'b2', date:'06/01', type:'대항전', result:[
+      "도세준","제빙그켬","띵띵띵띵띵띵","제로v","혁빡",
+      "솔신","동고둥이","별샷","싫은디","짱득춘","콩프리다용","낭심에한방",
+      "킴서현","ilrain","G존더코","엔이티알","암살도령","클로델",
+      "송이주","네번째밤","쫜득쿠키","디듣","레몬맛소다","댕그랑","원일짱",
+      "킴쭈이","크롱v","설탕우유","쑤수슈퍼노바","지뚜야"
+    ]}
+  ];
+  S.currentId = 'b1';
+}
+
+function save(){try{localStorage.setItem('guild_v4',JSON.stringify(S))}catch(e){}}
+function load(){
+  try{const d=localStorage.getItem('guild_v4');if(d){S=JSON.parse(d);return}}catch(e){}
+  seed();save();
+}
+
+// ── helpers ──
+function pRank(name){ const i=S.members.indexOf(name); return i===-1?null:i+1; }
+function score(resultRank,name){ const p=pRank(name); return p===null?0:p-resultRank; }
+function sc(s){ return s>0?'pos':s<0?'neg':'zero'; }
+function ss(s){ return s>0?'+'+s:String(s); }
+function curBattle(){ return S.battles.find(b=>b.id===S.currentId)||S.battles[0]||null; }
+function tagCls(type){ return type==='토벌전'?'tag-tobul':'tag-daehang'; }
+function btagCls(type){ return type==='토벌전'?'btag-tobul':'btag-daehang'; }
+
+// ══════════════════════════════════════════════
+//  DASHBOARD
+// ══════════════════════════════════════════════
+function renderDashboard(){
+  const bt = curBattle();
+
+  const btns = [...S.battles].reverse().map(b=>`
+    <button class="battle-btn${b.id===S.currentId?' on':''}" onclick="selBattle('${b.id}')">
+      <span class="btag ${btagCls(b.type)}">${b.type}</span>${b.date}
+    </button>`).join('') +
+    ``;
+
+  let body = `<div style="text-align:center;padding:48px;color:var(--t3)">대결을 선택하세요</div>`;
+
+  if(bt){
+    const filled = bt.result.map((n,i)=>n?{name:n,rRank:i+1,pRank:pRank(n),sc:score(i+1,n)}:null).filter(Boolean);
+    const pos = filled.filter(r=>r.sc>0).length;
+    const neg = filled.filter(r=>r.sc<0).length;
+    const zero = filled.filter(r=>r.sc===0).length;
+    const maxSc = filled.length?Math.max(...filled.map(r=>r.sc)):0;
+    const minSc = filled.length?Math.min(...filled.map(r=>r.sc)):0;
+    const mvp  = filled.find(r=>r.sc===maxSc&&maxSc>0);
+    const wst  = filled.find(r=>r.sc===minSc&&minSc<0);
+
+    // 투력 순위 기준 정렬
+    const byPower = [...filled].sort((a,b)=>a.pRank-b.pRank);
+
+    body = `
+    <div class="summary-row">
+      <div class="chip"><div class="chip-label">플러스</div><div class="chip-val" style="color:var(--green)">${pos}명</div></div>
+      <div class="chip"><div class="chip-label">유지</div><div class="chip-val" style="color:var(--t2)">${zero}명</div></div>
+      <div class="chip"><div class="chip-label">마이너스</div><div class="chip-val" style="color:var(--red)">${neg}명</div></div>
+      ${mvp?`<div class="chip"><div class="chip-label">MVP</div>
+        <div class="chip-val" style="color:var(--gold);font-size:15px;padding-top:2px">${mvp.name}</div>
+        <div style="font-size:11px;color:var(--t3);margin-top:3px">+${maxSc}점</div></div>`:''}
+    </div>
+    <div class="result-panel">
+      <div class="rp-head">
+        <div class="rp-title"><span class="tag ${tagCls(bt.type)}">${bt.type}</span>${bt.date} 결과</div>
+        <div style="font-size:12px;color:var(--t3)">${filled.length}/30</div>
+      </div>
+      <div class="row-head">
+        <div>투력순위</div><div>성과순위</div><div>닉네임</div>
+        <div class="hide-m" style="text-align:center">차이</div>
+        <div style="text-align:right">점수</div>
+      </div>
+      ${byPower.map(r=>{
+        const rowCls = r.sc>0?'rpos':r.sc<0?'rneg':'rzero';
+        const diff = r.pRank-r.rRank;
+        const diffStr = diff>0?`▲${diff}`:diff<0?`▼${Math.abs(diff)}`:'=';
+        const diffCol = diff>0?'var(--green)':diff<0?'var(--red)':'var(--t3)';
+        return `<div class="row ${rowCls}">
+          <div class="cell" style="font-size:12px;color:var(--text);font-weight:700">${r.pRank}위</div>
+          <div class="cell cr${r.rRank<=3?' top3':''}">${r.rRank}위</div>
+          <div class="cell" style="font-size:14px;font-weight:500">${r.name}</div>
+          <div class="cell cdiff hide-m" style="color:${diffCol};justify-content:center">${diffStr}</div>
+          <div class="cell cscore"><span class="sv ${sc(r.sc)}">${ss(r.sc)}</span></div>
+        </div>`;
+      }).join('')}
+    </div>`;
+  }
+
+  document.getElementById('page-dashboard').innerHTML = `
+    <div class="battle-bar-wrap"><div class="battle-bar">${btns}</div></div>
+    ${body}`;
+}
+
+function selBattle(id){ S.currentId=id; save(); renderDashboard(); }
+
+// ══════════════════════════════════════════════
+//  ENTRY PAGE
+// ══════════════════════════════════════════════
+let MC = {battleId:null, slotIdx:null};
+let openPanels = new Set(); // 펼쳐진 패널 ID 기억
+
+function renderEntryPage(){
+  const panels = [...S.battles].reverse().map(bt=>{
+    const tCls = tagCls(bt.type);
+    const slots = Array.from({length:30},(_,i)=>{
+      const n = bt.result[i]||null;
+      const s = n?score(i+1,n):null;
+      const pr = n?pRank(n):null;
+      return `<div class="slot${n?' filled':''}" onclick="openModal('${bt.id}',${i})">
+        <div class="snum${i<3?' top3':''}">${i+1}</div>
+        ${n
+          ?`<div class="sname">${n}<span style="font-size:10px;color:var(--t3);margin-left:4px">투${pr}위</span></div>
+            <div class="sscore ${sc(s)}">${ss(s)}</div>
+            <button class="sclear" onclick="clearSlot(event,'${bt.id}',${i})">✕</button>`
+          :`<div class="sempty">클릭하여 선택</div>`}
+      </div>`;
+    }).join('');
+    const isOpen = openPanels.has(bt.id);
+    return `<div class="battle-panel${isOpen?'':' collapsed'}" id="panel-${bt.id}">
+      <div class="panel-head" onclick="togglePanel('${bt.id}')">
+        <div class="panel-head-left">
+          <span class="collapse-arrow">▼</span>
+          <div class="panel-head-title"><span class="tag ${tCls}">${bt.type}</span>${bt.date}</div>
+          <span style="font-size:11px;color:var(--t3)">${bt.result.filter(Boolean).length}/30</span>
+        </div>
+        <button class="btn btn-sm btn-danger" onclick="deleteBattle(event,'${bt.id}','${bt.date}','${bt.type}')">삭제</button>
+      </div>
+      <div class="slots">${slots}</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('page-entry').innerHTML = `
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:18px;flex-wrap:wrap">
+      <div class="sec-title" style="margin:0">대결 결과 입력</div>
+      <button class="btn btn-sm btn-prim" onclick="openCalModal()">+ 대결 추가</button>
+    </div>
+
+    ${S.battles.length===0
+      ?'<div style="text-align:center;padding:48px;color:var(--t3)">대결을 추가해주세요</div>'
+      :`<div class="battle-grid">${panels}</div>`}`;
+}
+
+function togglePanel(id){
+  const el = document.getElementById('panel-'+id);
+  if(!el) return;
+  const closing = !el.classList.contains('collapsed');
+  el.classList.toggle('collapsed');
+  if(closing) openPanels.delete(id);
+  else openPanels.add(id);
+}
+
+// ── 달력 모달 ──────────────────────────────────
+let calState = { year:0, month:0, day:0, type:'토벌전' };
+function openCalModal(){
+  const now = new Date();
+  calState.year = now.getFullYear();
+  calState.month = now.getMonth(); // 0-based
+  calState.day = 0;
+  calState.type = '토벌전';
+  calSelType('토벌전');
+  renderCal();
+  document.getElementById('cal-modal-bg').classList.add('open');
+}
+function calBgClick(e){ if(e.target===document.getElementById('cal-modal-bg')) document.getElementById('cal-modal-bg').classList.remove('open'); }
+function calMove(d){
+  calState.month += d;
+  if(calState.month < 0){ calState.month=11; calState.year--; }
+  if(calState.month > 11){ calState.month=0; calState.year++; }
+  calState.day = 0;
+  renderCal();
+}
+function calSelType(t){
+  calState.type = t;
+  document.getElementById('cal-type-tobul').classList.toggle('on', t==='토벌전');
+  document.getElementById('cal-type-daehang').classList.toggle('on', t==='대항전');
+}
+function renderCal(){
+  const y=calState.year, m=calState.month;
+  const months=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+  document.getElementById('cal-title').textContent = y+'년 '+months[m];
+  const firstDay = new Date(y,m,1).getDay(); // 0=일
+  const daysInMonth = new Date(y,m+1,0).getDate();
+  const today = new Date();
+  let html = '';
+  for(let i=0;i<firstDay;i++) html += '<div class="cal-day empty"></div>';
+  for(let d=1;d<=daysInMonth;d++){
+    const isToday = today.getFullYear()===y && today.getMonth()===m && today.getDate()===d;
+    const isSel = calState.day===d;
+    html += `<button class="cal-day${isToday?' today':''}${isSel?' selected':''}" onclick="calPickDay(${d})">${d}</button>`;
+  }
+  document.getElementById('cal-days').innerHTML = html;
+}
+function calPickDay(d){
+  calState.day = d;
+  renderCal();
+}
+function calConfirm(){
+  if(!calState.day){ showToast('날짜를 선택하세요'); return; }
+  const mm = String(calState.month+1).padStart(2,'0');
+  const dd = String(calState.day).padStart(2,'0');
+  const dateStr = mm+'/'+dd;
+  const b={id:'b'+Date.now(),date:dateStr,type:calState.type,result:Array(30).fill(null)};
+  S.battles.push(b); S.currentId=b.id;
+  document.getElementById('cal-modal-bg').classList.remove('open');
+  openPanels.add(b.id);
+  save(); renderEntryPage(); showToast(dateStr+' '+calState.type+' 추가!');
+}
+function deleteBattle(e,id,date,type){
+  e.stopPropagation();
+  showConfirm(date+' '+type+' 결과를 삭제할까요?\n입력된 데이터가 모두 사라집니다.', function(){
+    S.battles=S.battles.filter(b=>b.id!==id);
+    if(S.currentId===id)S.currentId=S.battles[S.battles.length-1]?.id||null;
+    save();renderAll();
+  });
+}
+function clearSlot(e,bid,idx){
+  e.stopPropagation();
+  const bt=S.battles.find(b=>b.id===bid);if(!bt)return;
+  bt.result[idx]=null;save();renderEntryPage();
+}
+
+// ══════════════════════════════════════════════
+//  MODAL
+// ══════════════════════════════════════════════
+function openModal(bid,idx){
+  MC={battleId:bid,slotIdx:idx};
+  document.getElementById('modal-title').textContent=`${idx+1}위 길드원 선택`;
+  document.getElementById('modal-search').value='';
+  renderModalList();
+  document.getElementById('modal-bg').classList.add('open');
+  setTimeout(()=>document.getElementById('modal-search').focus(),40);
+}
+function closeModal(){document.getElementById('modal-bg').classList.remove('open')}
+function bgClick(e){if(e.target===document.getElementById('modal-bg'))closeModal()}
+function renderModalList(){
+  const bt=S.battles.find(b=>b.id===MC.battleId);if(!bt)return;
+  const q=document.getElementById('modal-search').value.trim().toLowerCase();
+  const used=new Set(bt.result.filter((n,i)=>n&&i!==MC.slotIdx));
+  document.getElementById('modal-list').innerHTML=S.members
+    .map((n,i)=>({name:n,pr:i+1}))
+    .filter(m=>!q||m.name.toLowerCase().includes(q)||m.name.includes(q))
+    .map(m=>{
+      const isUsed=used.has(m.name);
+      const isSel=bt.result[MC.slotIdx]===m.name;
+      return `<div class="mitem${isUsed?' used':''}${isSel?' sel':''}" onclick="pick('${m.name}')">
+        <div class="mrank">투력${m.pr}위</div>
+        <div class="mname">${m.name}</div>
+      </div>`;
+    }).join('');
+}
+function pick(name){
+  const bt=S.battles.find(b=>b.id===MC.battleId);if(!bt)return;
+  bt.result[MC.slotIdx]=name;
+  save();closeModal();renderEntryPage();
+  showToast(`${MC.slotIdx+1}위 → ${name}`);
+}
+
+// ══════════════════════════════════════════════
+//  MEMBERS
+// ══════════════════════════════════════════════
+function renderMembersPage(){
+  document.getElementById('page-members').innerHTML=`
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;flex-wrap:wrap">
+      <div class="sec-title" style="margin:0">길드원 (순서 = 투력순위)</div>
+      <button class="btn btn-prim btn-sm" onclick="saveMembers()">💾 저장</button>
+      <button class="btn btn-sm" onclick="addMember()">+ 추가</button>
+    </div>
+    <div style="font-size:12px;color:var(--t3);margin-bottom:14px">↑↓ 버튼으로 순서 조정 → 투력순위 자동 변경</div>
+    <div class="member-table">
+      <div class="mt-head"><div>투력순위</div><div>닉네임</div><div>관리</div></div>
+      ${S.members.map((n,i)=>`
+      <div class="mt-row">
+        <div style="font-family:'Noto Sans KR',sans-serif;font-size:13px;font-weight:700;color:var(--text)">${i+1}위</div>
+        <div><input class="name-edit" value="${n}" id="mn-${i}" onblur="upName(${i},this.value)"></div>
+        <div style="display:flex;gap:5px">
+          <button class="btn btn-sm" onclick="moveM(${i},-1)" ${i===0?'disabled':''}>↑</button>
+          <button class="btn btn-sm" onclick="moveM(${i},1)" ${i===S.members.length-1?'disabled':''}>↓</button>
+          <button class="btn btn-sm btn-danger" onclick="removeM(${i})">삭제</button>
+        </div>
+      </div>`).join('')}
+    </div>`;
+}
+function saveMembers(){save();showToast('저장 완료 ✓');renderAll()}
+function upName(i,v){if(v.trim())S.members[i]=v.trim()}
+function moveM(i,d){
+  const ni=i+d;if(ni<0||ni>=S.members.length)return;
+  [S.members[i],S.members[ni]]=[S.members[ni],S.members[i]];
+  save();renderMembersPage();
+}
+function addMember(){
+  document.getElementById('addm-name').value='';
+  document.getElementById('addm-rank').value='';
+  document.getElementById('addmember-bg').classList.add('open');
+  setTimeout(()=>document.getElementById('addm-name').focus(),50);
+}
+function closeAddMember(){
+  document.getElementById('addmember-bg').classList.remove('open');
+}
+function confirmAddMember(){
+  const name=document.getElementById('addm-name').value.trim();
+  if(!name){showToast('닉네임을 입력하세요');return;}
+  const rankVal=parseInt(document.getElementById('addm-rank').value);
+  if(rankVal>=1 && rankVal<=S.members.length+1){
+    S.members.splice(rankVal-1,0,name);
+  } else {
+    S.members.push(name);
+  }
+  closeAddMember();
+  save();renderMembersPage();
+  showToast(name+' 추가 완료!');
+}
+function removeM(i){
+  showConfirm(S.members[i]+' 길드원을 삭제할까요?', function(){
+    S.members.splice(i,1);save();renderMembersPage();
+  });
+}
+
+// ══════════════════════════════════════════════
+//  CONFIRM MODAL
+// ══════════════════════════════════════════════
+let _confirmCb = null;
+function showConfirm(msg, cb){
+  _confirmCb = cb;
+  document.getElementById('confirm-msg').innerHTML = msg.replace(/\n/g,'<br>');
+  document.getElementById('confirm-bg').classList.add('open');
+}
+function confirmOk(){
+  document.getElementById('confirm-bg').classList.remove('open');
+  if(_confirmCb){ _confirmCb(); _confirmCb=null; }
+}
+function confirmCancel(){
+  document.getElementById('confirm-bg').classList.remove('open');
+  _confirmCb=null;
+}
+
+// ══════════════════════════════════════════════
+//  NAV + INIT
+// ══════════════════════════════════════════════
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2000);
+}
+function goPage(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('on'));
+  document.getElementById('page-'+name).classList.add('on');
+  document.querySelectorAll('.nav-tab').forEach(t=>{
+    if(t.getAttribute('onclick').includes(name))t.classList.add('on');
+  });
+  if(name==='dashboard')renderDashboard();
+  if(name==='entry')renderEntryPage();
+  if(name==='members')renderMembersPage();
+}
+function renderAll(){
+  const cur=document.querySelector('.nav-tab.on')?.getAttribute('onclick').match(/'(\w+)'/)?.[1]||'dashboard';
+  goPage(cur);
+}
+
+load();renderAll();
+</script>
+
+<footer style="text-align:center;padding:28px 16px;font-size:12px;color:var(--t3);border-top:1px solid var(--border);margin-top:40px">
+  🩷 매왕길드 성과관리 &nbsp;·&nbsp; by. 망치깎는노인 &nbsp;·&nbsp; 2025.06
+</footer>
+</body>
+</html>
