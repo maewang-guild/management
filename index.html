@@ -358,6 +358,9 @@ function renderDashboard(){
       ${mvp?`<div class="chip"><div class="chip-label">MVP</div>
         <div class="chip-val" style="color:var(--gold);font-size:15px;padding-top:2px">${mvp.name}</div>
         <div style="font-size:11px;color:var(--t3);margin-top:3px">+${maxSc}점</div></div>`:''}
+      ${wst?`<div class="chip"><div class="chip-label">최저</div>
+        <div class="chip-val" style="color:var(--red);font-size:15px;padding-top:2px">${wst.name}</div>
+        <div style="font-size:11px;color:var(--t3);margin-top:3px">${minSc}점</div></div>`:''}
     </div>
     <div class="result-panel">
       <div class="rp-head">
