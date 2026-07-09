@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(\"/c/Program Files/Google/Chrome/Application/chrome.exe\" --headless=new --disable-gpu --no-sandbox --user-data-dir=\"C:\\\\Users\\\\user\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c---src-maewang-guild-management\\\\cfc0a2a7-8227-4573-9fb0-bd24f6382cff\\\\scratchpad\\\\chrome-profile\" --screenshot=\"C:\\\\Users\\\\user\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c---src-maewang-guild-management\\\\cfc0a2a7-8227-4573-9fb0-bd24f6382cff\\\\scratchpad\\\\dash_check.png\" --window-size=1280,1000 --virtual-time-budget=5000 \"file:///c:/_src/maewang-guild/management/index.html\")",
+      "Bash(echo \"EXIT CODE: $?\")",
+      "Bash(\"/c/Program Files/Google/Chrome/Application/chrome.exe\" --version)"
+    ]
+  }
+}
