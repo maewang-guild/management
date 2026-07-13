@@ -407,6 +407,9 @@ function fbInit(){
       if(S.members && !Array.isArray(S.members)) S.members = Object.values(S.members);
       if(S.battles && !Array.isArray(S.battles)) S.battles = Object.values(S.battles);
       S.currentId = keepId || S.currentId || (S.battles[S.battles.length-1]?.id ?? null);
+      const scoresChanged = migrateLegacyScores();
+      const powerChanged = migrateHistoricalPower();
+      if(scoresChanged || powerChanged) fbSave();
     } else {
       seed();
       fbSave();
@@ -436,7 +439,7 @@ function save(){
   fbSave();
 }
 function loadLocal(){
-  try{const d=localStorage.getItem('guild_v5');if(d){S=JSON.parse(d);renderAll();return}}catch(e){}
+  try{const d=localStorage.getItem('guild_v5');if(d){S=JSON.parse(d);migrateLegacyScores();migrateHistoricalPower();renderAll();return}}catch(e){}
   seed(); renderAll();
 }
 
@@ -454,6 +457,56 @@ function tagCls(type){ return 'tag-'+(TYPE_CLASS[type]||'daehang'); }
 // 컨텐츠 타입별 점수 단위: 수련장은 만 단위, 나머지는 억 단위
 function scoreUnit(type){ return type==='수련장' ? '만' : '억'; }
 function unitMult(type){ return type==='수련장' ? 1e4 : 1e8; }
+
+// ── 구버전(텍스트 "100억 2000만") 점수 → 신버전(숫자+단위) 마이그레이션 ──
+function legacyParseScore(str){
+  const re = /([\d,]+)\s*(억|만)?/g;
+  let m, total = 0, matched = false;
+  while((m = re.exec(str))){
+    const num = parseFloat(m[1].replace(/,/g,''));
+    if(isNaN(num)) continue;
+    matched = true;
+    total += m[2]==='억' ? num*1e8 : m[2]==='만' ? num*1e4 : num;
+  }
+  return matched ? total : null;
+}
+function migrateLegacyScores(){
+  if(!S.battles) return false;
+  let changed = false;
+  S.battles.forEach(bt=>{
+    if(!bt.scores) return;
+    const mult = unitMult(bt.type);
+    Object.keys(bt.scores).forEach(name=>{
+      const v = bt.scores[name];
+      if(typeof v === 'string'){
+        const won = legacyParseScore(v);
+        if(won !== null) bt.scores[name] = Math.round((won/mult)*10)/10;
+        else delete bt.scores[name];
+        changed = true;
+      }
+    });
+  });
+  return changed;
+}
+// 엑셀 기반 seed()의 대결별 투력순위(power)가 아직 반영 안 된 과거 기록을 보정
+// (power가 비어있으면 앱이 "현재 길드원 순서"로 대체해버려서, 그 배틀 당시엔 없던 신규 인원이 옛날 기록에 섞여 보이는 문제)
+function migrateHistoricalPower(){
+  if(!S.battles || !S.battles.length) return false;
+  const backup = S;
+  S = { members:[], battles:[], jobs:{}, currentId:null };
+  seed();
+  const freshBattles = S.battles;
+  S = backup;
+  let changed = false;
+  freshBattles.forEach(fb=>{
+    const bt = S.battles.find(b=>b.id===fb.id);
+    if(bt && (!bt.power || !Array.isArray(bt.power) || !bt.power.length)){
+      bt.power = fb.power;
+      changed = true;
+    }
+  });
+  return changed;
+}
 
 // ── 직업 ──
 const JOB_LIST = ['히어로','비숍','닼나','섀도어','썬콜','보마','신궁','나로','팔라딘','불독','바이퍼','캡틴'];
