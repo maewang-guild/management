@@ -24,6 +24,20 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
 .nav-tab{height:52px;padding:0 14px;display:flex;align-items:center;font-size:13px;color:var(--t2);border:none;background:none;cursor:pointer;font-family:'Noto Sans KR',sans-serif;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap}
 .nav-tab:hover{color:var(--text)}
 .nav-tab.on{color:var(--blue);border-bottom-color:var(--blue)}
+.nav-tabs-wrap{display:flex;gap:4px;align-items:center}
+.nav-hamburger{display:none;margin-left:auto;background:none;border:none;cursor:pointer;padding:6px;color:var(--t2);flex-direction:column;gap:5px;align-items:center;justify-content:center}
+.nav-hamburger span{display:block;width:20px;height:2px;background:currentColor;border-radius:2px;transition:all .22s}
+.nav-hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+.nav-hamburger.open span:nth-child(2){opacity:0}
+.nav-hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+.nav-hamburger:hover{color:var(--text)}
+.nav-cur-page{display:none;font-size:13px;color:var(--t2);margin-left:8px}
+.nav-dropdown{display:none;position:fixed;top:52px;left:0;right:0;background:var(--s1);border-bottom:1px solid var(--border2);z-index:49;flex-direction:column;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+.nav-dropdown.open{display:flex}
+.nav-dropdown .nav-tab{height:48px;padding:0 20px;border-bottom:1px solid var(--border);border-left:3px solid transparent;font-size:14px;width:100%}
+.nav-dropdown .nav-tab.on{border-left-color:var(--blue);border-bottom-color:var(--border);background:rgba(91,138,245,.06);color:var(--blue)}
+.nav-dropdown-overlay{display:none;position:fixed;inset:0;top:52px;z-index:48}
+.nav-dropdown-overlay.open{display:block}
 
 .page{display:none;padding:24px;max-width:1200px;margin:0 auto}
 .page.on{display:block}
@@ -157,23 +171,55 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
 
 @media(max-width:640px){
   .page{padding:14px}
+  .nav{padding:0 12px}
+  .nav-logo{font-size:14px;margin-right:6px}
+  .nav-tabs-wrap{display:none}
+  .nav-hamburger{display:flex}
+  .nav-cur-page{display:block}
   .battle-grid{grid-template-columns:1fr}
   .row-head,.row{grid-template-columns:50px 44px 1fr 60px}
   .hide-m{display:none}
   .mt-head,.mt-row{grid-template-columns:44px 1fr auto}
   .two-col-grid{grid-template-columns:1fr}
   .two-col-grid > div{border-right:none !important}
+  .summary-row{gap:8px}
+  .chip{min-width:80px;padding:10px 12px}
+  .panel-head-left{flex-wrap:wrap;row-gap:4px}
+  .score-row{flex-wrap:wrap}
+  .sr-input{width:auto;flex:1 1 100px;min-width:0}
 }
 </style>
+<!-- Firebase compat SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 </head>
 <body>
 
+<!-- 로딩 화면 -->
+<div id="loading-screen" style="position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap:16px">
+  <div style="font-size:36px">🩷</div>
+  <div style="color:var(--t2);font-size:14px">매왕길드 데이터 불러오는 중...</div>
+</div>
+
 <nav class="nav">
   <div class="nav-logo">🩷 매왕길드</div>
+  <span class="nav-cur-page" id="nav-cur-page">현황판</span>
+  <div class="nav-tabs-wrap" id="nav-tabs-wrap">
+    <button class="nav-tab on" onclick="goPage('dashboard')">📊 현황판</button>
+    <button class="nav-tab" onclick="goPage('entry')">✏️ 결과 입력</button>
+    <button class="nav-tab" onclick="goPage('members')">👥 길드원</button>
+  </div>
+  <button class="nav-hamburger" id="nav-hamburger" onclick="toggleHamburger()" aria-label="메뉴">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<div class="nav-dropdown-overlay" id="nav-dropdown-overlay" onclick="closeHamburger()"></div>
+<div class="nav-dropdown" id="nav-dropdown">
   <button class="nav-tab on" onclick="goPage('dashboard')">📊 현황판</button>
   <button class="nav-tab" onclick="goPage('entry')">✏️ 결과 입력</button>
   <button class="nav-tab" onclick="goPage('members')">👥 길드원</button>
-</nav>
+</div>
 
 <div id="page-dashboard" class="page on"></div>
 <div id="page-entry" class="page"></div>
@@ -258,40 +304,90 @@ let S = {
 };
 
 function seed() {
-  S.members = ["도세준","제빙그켬","띵띵띵띵띵띵","제로v","혁빡",
-    "별샷","짱득춘","싫은디","솔신","낭심에한방","엔이티알","좋은디",
-    "킴서현","G존더코","콩프리다용","클로델","ilrain","디듣",
-    "송이주","레몬맛소다","네번째밤","쫜득쿠키","원일짱","응새",
-    "크롱v","킴쭈이","댕그랑","쑤수슈퍼노바","지뚜야","북부멋쟁이"];
+  S.members = ["도세준","제빙그켬","띵띵띵띵띵띵","제로v","혁빡","별샷","짱득춘","싫은디","솔신","낭심에한방","엔이티알","좋은디","킴서현","G존더코","콩프리다용","클로델","ilrain","디듣","송이주","레몬맛소다","네번째밤","쫜득쿠키","원일짱","응새","크롱v","킴쭈이","댕그랑","쑤수슈퍼노바","지뚜야","북부멋쟁이"];
   S.battles = [
-    { id:'b1', date:'07/01', type:'수련장', scores:{
-      "혁빡":"2079만 5631","싫은디":"1701만 8103","낭심에한방":"1641만 7008","제빙그켬":"1557만 8796",
-      "제로v":"1458만 9468","도세준":"1425만 8055","G존더코":"1310만 6529","별샷":"1272만 4719",
-      "띵띵띵띵띵띵":"1264만 1322","원일짱":"1184만 9442","킴서현":"1168만 191","송이주":"1021만 9431",
-      "쫜득쿠키":"1011만 5919","짱득춘":"951만 2601","콩프리다용":"947만 3268","ilrain":"941만 5470",
-      "좋은디":"941만 4324","디듣":"891만 300","솔신":"889만 4628","엔이티알":"776만 6268",
-      "클로델":"754만 6434","크롱v":"631만 7361","레몬맛소다":"554만 2518","쑤수슈퍼노바":"530만 1477",
-      "네번째밤":"506만 4372","킴쭈이":"488만 8425","응새":"452만 1162","지뚜야":"397만 3191",
-      "댕그랑":"미참여"
-    }},
-    { id:'b2', date:'07/06', type:'대항전', scores:{
-      "제빙그켬":"3794억 9526만","도세준":"2619억 8315만","띵띵띵띵띵띵":"2146억 898만","제로v":"1762억 1036만",
-      "혁빡":"1716억 2471만","별샷":"1427억 9885만","싫은디":"1384억 1454만","낭심에한방":"1358억 4352만",
-      "솔신":"1261억 8693만","G존더코":"1226억 573만","킴서현":"1178억 260만","좋은디":"1091억 3925만",
-      "짱득춘":"1085억 1968만","엔이티알":"899억 3814만","ilrain":"817억 5833만","콩프리다용":"704억 8472만",
-      "디듣":"674억 181만","레몬맛소다":"647억 3380만","네번째밤":"632억 9157만","클로델":"623억 6897만",
-      "송이주":"613억 4433만","쫜득쿠키":"501억 5630만","원일짱":"453억 9503만","쑤수슈퍼노바":"296억 7031만",
-      "응새":"275억 189만","댕그랑":"272억 375만","크롱v":"271억 8597만","지뚜야":"175억 2797만",
-      "킴쭈이":"미참여","북부멋쟁이":"참여불가"
-    }}
+    { id:"b1", date:"05/31", type:"토벌전", scores:{} },
+    { id:"b2", date:"06/01", type:"대항전", scores:{} },
+    { id:"b3", date:"06/03", type:"길드보스", scores:{} },
+    { id:"b4", date:"06/07", type:"토벌전", scores:{} },
+    { id:"b5", date:"06/08", type:"대항전", scores:{"도세준":"2067억 7600만","제빙그켬":"1682억 8802만","혁빡":"1195억 8982만","제로v":"1056억 2480만","별샷":"1035억 297만","동고둥이":"1026억 1649만","싫은디":"798억 9274만","솔신":"661억 8932만","짱득춘":"634억 6295만","콩프리다용":"527억 9716만","낭심에한방":"498억 3991만","암살도령":"494억 2946만","ilrain":"404억 5582만","G존더코":"387억 3041만","킴서현":"384억 5377만","엔이티알":"380억 217만","송이주":"310억 8303만","클로델":"298억 5017만","쫜득쿠키":"262억 4672만","네번째밤":"256억 2982만","디듣":"256억 2233만","레몬맛소다":"247억 9078만","원일짱":"196억 6255만","댕그랑":"163억 7577만","설탕우유":"148억 5928만","킴쭈이":"142억 2889만","크롱v":"136억 4281만","쑤수슈퍼노바":"132억 9104만","지뚜야":"116억 3871만"} },
+    { id:"b6", date:"06/10", type:"길드보스", scores:{"제빙그켬":"1259억 8461만","도세준":"1257억 4716만","동고둥이":"819억 3010만","별샷":"723억 7464만","혁빡":"687억 3916만","제로v":"631억 8908만","짱득춘":"462억 5612만","솔신":"460억 7709만","싫은디":"443억 3437만","콩프리다용":"355억 4886만","낭심에한방":"340억 2087만","G존더코":"309억 6217만","ilrain":"298억 7941만","송이주":"291억 9294만","암살도령":"287억 3467만","킴서현":"282억 9059만","엔이티알":"267억 3427만","네번째밤":"219억 2666만","클로델":"211억 8563만","쫜득쿠키":"205억 7221만","원일짱":"204억 3493만","디듣":"197억 1218만","레몬맛소다":"178억 4905만","댕그랑":"143억 9981만","설탕우유":"138억 9012만","킴쭈이":"115억 6795만","크롱v":"114억 5099만","지뚜야":"103억 7845만","쑤수슈퍼노바":"101억 8125만"} },
+    { id:"b7", date:"06/14", type:"토벌전", scores:{} },
+    { id:"b8", date:"06/15", type:"대항전", scores:{"도세준":"1987억 7208만","제빙그켬":"1630억 5727만","혁빡":"1172억 3143만","제로v":"1084억 7829만","별샷":"1066억 4135만","싫은디":"1024억 8263만","솔신":"880억 5675만","낭심에한방":"702억 1612만","콩프리다용":"624억 5968만","좋은디":"612억 7992만","ilrain":"544억 876만","G존더코":"506억 2025만","엔이티알":"424억 7281만","킴서현":"413억 332만","디듣":"410억 9274만","송이주":"390억 4364만","클로델":"324억 1333만","쫜득쿠키":"318억 872만","네번째밤":"293억 3866만","원일짱":"225억 4050만","레몬맛소다":"224억 7874만","댕그랑":"174억 7421만","킴쭈이":"159억 9363만","크롱v":"159억 7273만","설탕우유":"147억 6026만","쑤수슈퍼노바":"136억 1019만","지뚜야":"116억 853만","동고둥이":"미참여","응새":"미참여"} },
+    { id:"b9", date:"06/17", type:"수련장", scores:{"혁빡":"2078만 1984","싫은디":"1666만 5105","낭심에한방":"1580만 8167","제빙그켬":"1470만 6786","도세준":"1470만 6429","제로v":"1209만 7011","G존더코":"1127만 1201","별샷":"1099만 8900","송이주":"964만 761","킴서현":"963만 4548","ilrain":"959만 2032","디듣":"958만 2342","쫜득쿠키":"909만 6726","원일짱":"905만 1117","좋은디":"861만 234","콩프리다용":"838만 1790","엔이티알":"763만 9845","클로델":"733만 1568","솔신":"623만 2104","레몬맛소다":"622만 1178","네번째밤":"538만 3368","쑤수슈퍼노바":"533만 421","크롱v":"523만 5936","댕그랑":"507만 4527","지뚜야":"397만 1745","킴쭈이":"385만 9263","설탕우유":"242만 5878","동고둥이":"미참여","응새":"미참여"} },
+    { id:"b10", date:"06/21", type:"토벌전", scores:{} },
+    { id:"b11", date:"06/22", type:"대항전", scores:{"도세준":"2473억 5003만","제빙그켬":"1969억 6113만","제로v":"1210억 9775만","혁빡":"1190억 4737만","별샷":"1085억 3472만","싫은디":"1072억 3844만","낭심에한방":"1011억 3527만","솔신":"903억 3136만","G존더코":"902억 6364만","좋은디":"890억 1882만","콩프리다용":"870억 8665만","ilrain":"644억 4079만","엔이티알":"510억 1401만","킴서현":"491억 5789만","송이주":"450억 1588만","레몬맛소다":"413억 8226만","쫜득쿠키":"390억 6503만","디듣":"384억 2205만","클로델":"336억 378만","네번째밤":"319억 6651만","원일짱":"253억 8806만","응새":"239억 4160만","댕그랑":"202억 1522만","쑤수슈퍼노바":"199억 9220만","킴쭈이":"192억 3139만","크롱v":"171억 1921만","설탕우유":"166억 8158만","지뚜야":"118억 3579만","동고둥이":"미참여"} },
+    { id:"b12", date:"06/28", type:"토벌전", scores:{} },
+    { id:"b13", date:"07/01", type:"수련장", scores:{"혁빡":"2079만 5631","싫은디":"1701만 8103","낭심에한방":"1641만 7008","제빙그켬":"1557만 8796","제로v":"1458만 9468","도세준":"1425만 8055","G존더코":"1310만 6529","별샷":"1272만 4719","띵띵띵띵띵띵":"1264만 1322","원일짱":"1184만 9442","킴서현":"1168만 191","송이주":"1021만 9431","쫜득쿠키":"1011만 5919","짱득춘":"951만 2601","콩프리다용":"947만 3268","ilrain":"941만 5470","좋은디":"941만 4324","디듣":"891만 300","솔신":"889만 4628","엔이티알":"776만 6268","클로델":"754만 6434","크롱v":"631만 7361","레몬맛소다":"554만 2518","쑤수슈퍼노바":"530만 1477","네번째밤":"506만 4372","킴쭈이":"488만 8425","설탕우유":"456만 846","응새":"452만 1162","지뚜야":"397만 3191","댕그랑":"미참여"} },
+    { id:"b14", date:"07/05", type:"토벌전", scores:{} },
+    { id:"b15", date:"07/06", type:"대항전", scores:{"제빙그켬":"3794억 9526만","도세준":"2619억 8315만","띵띵띵띵띵띵":"2146억 898만","제로v":"1762억 1036만","혁빡":"1716억 2471만","별샷":"1427억 9885만","싫은디":"1384억 1454만","낭심에한방":"1358억 4352만","솔신":"1261억 8693만","G존더코":"1226억 573만","킴서현":"1178억 260만","좋은디":"1091억 3925만","짱득춘":"1085억 1968만","엔이티알":"899억 3814만","ilrain":"817억 5833만","콩프리다용":"704억 8472만","디듣":"674억 181만","레몬맛소다":"647억 3380만","네번째밤":"632억 9157만","클로델":"623억 6897만","송이주":"613억 4433만","쫜득쿠키":"501억 5630만","원일짱":"453억 9503만","쑤수슈퍼노바":"296억 7031만","응새":"275억 189만","댕그랑":"272억 375만","크롱v":"271억 8597만","지뚜야":"175억 2797만","킴쭈이":"미참여","북부멋쟁이":"참여불가"} }
   ];
-  S.currentId = 'b2';
+  S.currentId = 'b15';
 }
 
-function save(){try{localStorage.setItem('guild_v5',JSON.stringify(S))}catch(e){}}
-function load(){
-  try{const d=localStorage.getItem('guild_v5');if(d){S=JSON.parse(d);return}}catch(e){}
-  seed();save();
+// ══════════════════════════════════════════════
+//  FIREBASE 연동
+// ══════════════════════════════════════════════
+let fbLoaded = false;
+let db, dataRef;
+let _saveCount = 0;
+
+function fbInit(){
+  const firebaseConfig = {
+    apiKey: "AIzaSyBPwabtixq2vjs16piQtmulZ24XlEzWUm0",
+    authDomain: "maewang-guild.firebaseapp.com",
+    databaseURL: "https://maewang-guild-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "maewang-guild",
+    storageBucket: "maewang-guild.firebasestorage.app",
+    messagingSenderId: "780102203875",
+    appId: "1:780102203875:web:84561053f292a5ee06c8d6"
+  };
+  firebase.initializeApp(firebaseConfig);
+  db = firebase.database();
+  dataRef = db.ref('guildData');
+
+  dataRef.on('value', (snapshot)=>{
+    // 내가 직접 저장한 직후엔 무시 (불필요한 재렌더 방지)
+    if(_saveCount > 0){ _saveCount--; return; }
+    const data = snapshot.val();
+    if(data){
+      const keepId = S.currentId;
+      S = data;
+      // Firebase는 배열을 객체로 변환 → 다시 배열로 복원
+      if(S.members && !Array.isArray(S.members)) S.members = Object.values(S.members);
+      if(S.battles && !Array.isArray(S.battles)) S.battles = Object.values(S.battles);
+      S.currentId = keepId || S.currentId || (S.battles[S.battles.length-1]?.id ?? null);
+    } else {
+      seed();
+      fbSave();
+    }
+    fbLoaded = true;
+    renderAll();
+    document.getElementById('loading-screen')?.remove();
+  }, (error)=>{
+    console.error('FB load error', error);
+    loadLocal();
+    document.getElementById('loading-screen')?.remove();
+  });
+}
+
+function fbSave(){
+  try{
+    if(dataRef){
+      _saveCount++;
+      const toSave = JSON.parse(JSON.stringify(S));
+      dataRef.set(toSave);
+    }
+  }catch(e){ console.error('FB save error', e); if(_saveCount>0)_saveCount--; }
+}
+
+function save(){
+  try{localStorage.setItem('guild_v5',JSON.stringify(S))}catch(e){}
+  fbSave();
+}
+function loadLocal(){
+  try{const d=localStorage.getItem('guild_v5');if(d){S=JSON.parse(d);renderAll();return}}catch(e){}
+  seed(); renderAll();
 }
 
 // ── helpers ──
@@ -640,6 +736,7 @@ function showToast(msg){
   t.textContent=msg;t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'),2000);
 }
+const PAGE_LABELS = {dashboard:'현황판',entry:'결과 입력',members:'길드원'};
 function goPage(name){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
   document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('on'));
@@ -647,16 +744,32 @@ function goPage(name){
   document.querySelectorAll('.nav-tab').forEach(t=>{
     if(t.getAttribute('onclick').includes(name))t.classList.add('on');
   });
+  const lbl = document.getElementById('nav-cur-page');
+  if(lbl) lbl.textContent = PAGE_LABELS[name]||'';
+  closeHamburger();
   if(name==='dashboard')renderDashboard();
   if(name==='entry')renderEntryPage();
   if(name==='members')renderMembersPage();
+}
+function toggleHamburger(){
+  const hb = document.getElementById('nav-hamburger');
+  const dd = document.getElementById('nav-dropdown');
+  const ov = document.getElementById('nav-dropdown-overlay');
+  const isOpen = dd.classList.contains('open');
+  if(isOpen){ closeHamburger(); }
+  else { hb.classList.add('open'); dd.classList.add('open'); ov.classList.add('open'); }
+}
+function closeHamburger(){
+  document.getElementById('nav-hamburger')?.classList.remove('open');
+  document.getElementById('nav-dropdown')?.classList.remove('open');
+  document.getElementById('nav-dropdown-overlay')?.classList.remove('open');
 }
 function renderAll(){
   const cur=document.querySelector('.nav-tab.on')?.getAttribute('onclick').match(/'(\w+)'/)?.[1]||'dashboard';
   goPage(cur);
 }
 
-load();renderAll();
+fbInit();
 </script>
 
 <footer style="text-align:center;padding:28px 16px;font-size:12px;color:var(--t3);border-top:1px solid var(--border);margin-top:40px">
