@@ -169,6 +169,21 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
 .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(14px);background:var(--green);color:#061a0e;padding:10px 20px;border-radius:9px;font-weight:500;font-size:13px;opacity:0;transition:all .22s;z-index:999;pointer-events:none}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
+/* 비밀번호 모달 */
+.pw-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:500;display:none;align-items:center;justify-content:center;padding:20px}
+.pw-modal-bg.open{display:flex}
+.pw-box{background:var(--s1);border:1px solid var(--border2);border-radius:18px;width:100%;max-width:320px;padding:32px 28px 28px;text-align:center;position:relative;box-shadow:0 24px 60px rgba(0,0,0,.5)}
+.pw-close{position:absolute;top:14px;right:16px;background:none;border:none;color:var(--t3);font-size:20px;cursor:pointer;line-height:1;padding:4px}
+.pw-close:hover{color:var(--text)}
+.pw-icon{font-size:36px;margin-bottom:14px}
+.pw-title{font-size:17px;font-weight:700;margin-bottom:5px}
+.pw-sub{font-size:12px;color:var(--t3);margin-bottom:22px}
+.pw-input{width:100%;background:var(--s2);border:1px solid var(--border2);color:var(--text);padding:12px 14px;border-radius:10px;font-size:22px;text-align:center;letter-spacing:10px;outline:none;margin-bottom:8px}
+.pw-input:focus{border-color:var(--blue)}
+.pw-error{font-size:12px;color:var(--red);height:18px;margin-bottom:14px;min-height:18px}
+.pw-btn{width:100%;padding:12px;border-radius:10px;background:var(--blue);border:none;color:#fff;font-size:14px;font-family:'Noto Sans KR',sans-serif;cursor:pointer;font-weight:500;transition:background .15s}
+.pw-btn:hover{background:var(--blue2)}
+
 @media(max-width:640px){
   .page{padding:14px}
   .nav{padding:0 12px}
@@ -253,6 +268,20 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- 비밀번호 모달 -->
+<div class="pw-modal-bg" id="pw-modal-bg">
+  <div class="pw-box">
+    <button class="pw-close" onclick="closePwModal()">✕</button>
+    <div class="pw-icon">🔒</div>
+    <div class="pw-title">관리자 인증</div>
+    <div class="pw-sub">관리자만 접근할 수 있어요</div>
+    <input class="pw-input" type="password" id="pw-input" maxlength="10" placeholder="••••"
+      onkeydown="if(event.key==='Enter')checkPw()">
+    <div class="pw-error" id="pw-error"></div>
+    <button class="pw-btn" onclick="checkPw()">확인</button>
+  </div>
+</div>
 
 <!-- 길드원 추가 모달 -->
 <div class="modal-bg" id="addmember-bg" onclick="if(event.target===this)closeAddMember()">
@@ -737,7 +766,22 @@ function showToast(msg){
   setTimeout(()=>t.classList.remove('show'),2000);
 }
 const PAGE_LABELS = {dashboard:'현황판',entry:'결과 입력',members:'길드원'};
+const PW = '0318';
+let _authenticated = false;
+let _pendingPage = null;
 function goPage(name){
+  if(name !== 'dashboard' && !_authenticated){
+    _pendingPage = name;
+    document.getElementById('pw-input').value='';
+    document.getElementById('pw-error').textContent='';
+    document.getElementById('pw-modal-bg').classList.add('open');
+    closeHamburger();
+    setTimeout(()=>document.getElementById('pw-input').focus(),50);
+    return;
+  }
+  _showPage(name);
+}
+function _showPage(name){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
   document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('on'));
   document.getElementById('page-'+name).classList.add('on');
@@ -750,6 +794,22 @@ function goPage(name){
   if(name==='dashboard')renderDashboard();
   if(name==='entry')renderEntryPage();
   if(name==='members')renderMembersPage();
+}
+function closePwModal(){
+  document.getElementById('pw-modal-bg').classList.remove('open');
+  _pendingPage = null;
+}
+function checkPw(){
+  const val = document.getElementById('pw-input').value;
+  if(val === PW){
+    _authenticated = true;
+    document.getElementById('pw-modal-bg').classList.remove('open');
+    if(_pendingPage){ _showPage(_pendingPage); _pendingPage=null; }
+  } else {
+    document.getElementById('pw-error').textContent='비밀번호가 틀렸습니다';
+    document.getElementById('pw-input').value='';
+    setTimeout(()=>document.getElementById('pw-input').focus(),50);
+  }
 }
 function toggleHamburger(){
   const hb = document.getElementById('nav-hamburger');
