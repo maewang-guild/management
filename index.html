@@ -70,7 +70,7 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
 .cell{padding:11px 18px;display:flex;align-items:center;font-size:13px}
 .cell:first-child{padding-left:15px}
 .cn{font-family:'Noto Sans KR',sans-serif;font-size:12px;color:var(--t3)}
-.cr{font-family:'Noto Sans KR',sans-serif;font-size:12px;font-weight:700;color:var(--t2);justify-content:flex-end;font-variant-numeric:tabular-nums}
+.cr{font-family:'Noto Sans KR',sans-serif;font-size:12px;font-weight:700;color:var(--t2);justify-content:center;font-variant-numeric:tabular-nums}
 .cr.top3{color:var(--gold)}
 .cdiff{font-size:11px;font-family:'Space Grotesk',sans-serif}
 .cscore{justify-content:flex-end;padding-left:8px;padding-right:12px;overflow:hidden}
@@ -600,7 +600,7 @@ function renderDashboard(){
     const wst  = filled.find(r=>r.sc===minSc&&minSc<0);
 
     const colHead = `<div class="row-head">
-      <div style="text-align:right">투력</div><div style="text-align:right">성과</div><div>닉네임</div>
+      <div style="text-align:center">투력</div><div style="text-align:center">성과</div><div>닉네임</div>
       <div class="hide-m" style="text-align:center">차이</div>
       <div style="text-align:right">점수</div>
     </div>`;
@@ -610,7 +610,7 @@ function renderDashboard(){
       const diffStr = diff===null?'—':diff>0?`▲${diff}`:diff<0?`▼${Math.abs(diff)}`:'=';
       const diffCol = diff===null?'var(--t3)':diff>0?'var(--green)':diff<0?'var(--red)':'var(--t3)';
       return `<div class="row ${rowCls}">
-        <div class="cell" style="font-size:12px;color:var(--text);font-weight:700;justify-content:flex-end;font-variant-numeric:tabular-nums;white-space:nowrap;padding-left:8px;padding-right:8px">${r.pRank}위</div>
+        <div class="cell" style="font-size:12px;color:var(--text);font-weight:700;justify-content:center;font-variant-numeric:tabular-nums;white-space:nowrap;padding-left:8px;padding-right:8px">${r.pRank}위</div>
         <div class="cell cr${r.rRank&&r.rRank<=3?' top3':''}" style="white-space:nowrap;padding-left:8px;padding-right:8px">${r.rRank?r.rRank+'위':'—'}</div>
         <div class="cell" style="font-size:14px;font-weight:500;gap:5px;flex-wrap:wrap">${r.name}${mvpBadge(r.name,mvpCounts)}${jobBadge(S.jobs&&S.jobs[r.name])}</div>
         <div class="cell cdiff hide-m" style="color:${diffCol};justify-content:center">${diffStr}</div>
