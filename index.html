@@ -100,12 +100,23 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
 .battle-panel.collapsed .slots{display:none}
 .battle-panel.collapsed .panel-head{border-bottom:none}
 .slots{padding:6px 10px}
+.guild-rank-row{display:flex;align-items:center;gap:8px;padding:9px 12px;margin:2px 0 8px;background:var(--s2);border:1px solid var(--border2);border-radius:8px}
+.grr-label{font-size:12px;color:var(--t2);flex:1}
+.grr-input{width:56px;background:var(--s1);border:1px solid var(--border2);color:var(--text);padding:5px 8px;border-radius:6px;font-size:13px;font-weight:700;text-align:center;outline:none;font-family:'Noto Sans KR',sans-serif;-moz-appearance:textfield}
+.grr-input::-webkit-outer-spin-button,.grr-input::-webkit-inner-spin-button{-webkit-appearance:none}
+.grr-input:focus{border-color:var(--blue)}
+.grr-unit{font-size:12px;color:var(--t2)}
 .score-row{display:flex;align-items:center;gap:9px;padding:6px 8px;border-radius:7px;border:1px solid transparent;margin-bottom:2px}
 .score-row:hover{background:var(--s2);border-color:var(--border)}
 .score-row.filled .sr-input{border-color:rgba(91,138,245,.35)}
 .sr-rank{font-family:'Noto Sans KR',sans-serif;font-size:11px;font-weight:700;color:var(--t3);width:26px;text-align:right;flex-shrink:0}
 .sr-rank.top3{color:var(--gold)}
-.sr-name{font-size:13px;flex:1;min-width:0}
+.sr-arrows{display:flex;flex-direction:column;gap:2px;flex-shrink:0}
+.sr-arrow-btn{width:18px;height:14px;display:flex;align-items:center;justify-content:center;background:var(--s2);border:1px solid var(--border2);border-radius:3px;color:var(--t2);font-size:8px;line-height:1;padding:0;cursor:pointer}
+.sr-arrow-btn:hover{border-color:var(--blue);color:var(--blue)}
+.sr-arrow-btn:disabled{opacity:.3;cursor:default}
+.sr-arrow-btn:disabled:hover{border-color:var(--border2);color:var(--t2)}
+.sr-name{font-size:13px;flex:1;min-width:0;display:flex;align-items:center;gap:5px;flex-wrap:wrap}
 .sr-input{background:var(--s2);border:1px solid var(--border2);color:var(--text);padding:6px 10px;border-radius:7px;font-size:12px;font-family:'Noto Sans KR',sans-serif;outline:none;width:150px;flex-shrink:0}
 .sr-input:focus{border-color:var(--blue)}
 .sr-crank{font-family:'Noto Sans KR',sans-serif;font-size:12px;font-weight:700;color:var(--t2);width:38px;text-align:right;flex-shrink:0}
@@ -139,6 +150,11 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
 .mt-row:last-child{border-bottom:none}
 .mt-row:hover{background:var(--s2)}
 .name-edit{background:transparent;border:none;color:var(--text);font-size:14px;font-family:'Noto Sans KR',sans-serif;width:100%;outline:none}
+.job-sel{background:var(--s2);border:1px solid var(--border);color:var(--t2);font-size:11px;font-family:'Noto Sans KR',sans-serif;cursor:pointer;outline:none;padding:2px 5px;border-radius:5px;width:100%;margin-top:2px}
+.job-sel:focus{border-color:var(--blue)}
+.job-sel option{background:#1c2030}
+.job-badge{font-size:10px;font-weight:600;padding:1px 6px;border-radius:10px;white-space:nowrap;flex-shrink:0}
+.mvp-badge{font-size:11px;font-weight:700;color:var(--gold);white-space:nowrap;flex-shrink:0}
 
 /* 달력 모달 */
 .cal-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:300;display:none;align-items:center;justify-content:center}
@@ -329,27 +345,28 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
 let S = {
   members: [], // 투력순위 = 인덱스+1
   battles: [], // [{id, date, type, scores:{name:rawScoreStr}}]
+  jobs: {}, // {name: job}
   currentId: null
 };
 
 function seed() {
   S.members = ["도세준","제빙그켬","띵띵띵띵띵띵","제로v","혁빡","별샷","짱득춘","싫은디","솔신","낭심에한방","엔이티알","좋은디","킴서현","G존더코","콩프리다용","클로델","ilrain","디듣","송이주","레몬맛소다","네번째밤","쫜득쿠키","원일짱","응새","크롱v","킴쭈이","댕그랑","쑤수슈퍼노바","지뚜야","북부멋쟁이"];
   S.battles = [
-    { id:"b1", date:"05/31", type:"토벌전", scores:{} },
-    { id:"b2", date:"06/01", type:"대항전", scores:{} },
-    { id:"b3", date:"06/03", type:"길드보스", scores:{} },
-    { id:"b4", date:"06/07", type:"토벌전", scores:{} },
-    { id:"b5", date:"06/08", type:"대항전", scores:{"도세준":"2067억 7600만","제빙그켬":"1682억 8802만","혁빡":"1195억 8982만","제로v":"1056억 2480만","별샷":"1035억 297만","동고둥이":"1026억 1649만","싫은디":"798억 9274만","솔신":"661억 8932만","짱득춘":"634억 6295만","콩프리다용":"527억 9716만","낭심에한방":"498억 3991만","암살도령":"494억 2946만","ilrain":"404억 5582만","G존더코":"387억 3041만","킴서현":"384억 5377만","엔이티알":"380억 217만","송이주":"310억 8303만","클로델":"298억 5017만","쫜득쿠키":"262억 4672만","네번째밤":"256억 2982만","디듣":"256억 2233만","레몬맛소다":"247억 9078만","원일짱":"196억 6255만","댕그랑":"163억 7577만","설탕우유":"148억 5928만","킴쭈이":"142억 2889만","크롱v":"136억 4281만","쑤수슈퍼노바":"132억 9104만","지뚜야":"116억 3871만"} },
-    { id:"b6", date:"06/10", type:"길드보스", scores:{"제빙그켬":"1259억 8461만","도세준":"1257억 4716만","동고둥이":"819억 3010만","별샷":"723억 7464만","혁빡":"687억 3916만","제로v":"631억 8908만","짱득춘":"462억 5612만","솔신":"460억 7709만","싫은디":"443억 3437만","콩프리다용":"355억 4886만","낭심에한방":"340억 2087만","G존더코":"309억 6217만","ilrain":"298억 7941만","송이주":"291억 9294만","암살도령":"287억 3467만","킴서현":"282억 9059만","엔이티알":"267억 3427만","네번째밤":"219억 2666만","클로델":"211억 8563만","쫜득쿠키":"205억 7221만","원일짱":"204억 3493만","디듣":"197억 1218만","레몬맛소다":"178억 4905만","댕그랑":"143억 9981만","설탕우유":"138억 9012만","킴쭈이":"115억 6795만","크롱v":"114억 5099만","지뚜야":"103억 7845만","쑤수슈퍼노바":"101억 8125만"} },
-    { id:"b7", date:"06/14", type:"토벌전", scores:{} },
-    { id:"b8", date:"06/15", type:"대항전", scores:{"도세준":"1987억 7208만","제빙그켬":"1630억 5727만","혁빡":"1172억 3143만","제로v":"1084억 7829만","별샷":"1066억 4135만","싫은디":"1024억 8263만","솔신":"880억 5675만","낭심에한방":"702억 1612만","콩프리다용":"624억 5968만","좋은디":"612억 7992만","ilrain":"544억 876만","G존더코":"506억 2025만","엔이티알":"424억 7281만","킴서현":"413억 332만","디듣":"410억 9274만","송이주":"390억 4364만","클로델":"324억 1333만","쫜득쿠키":"318억 872만","네번째밤":"293억 3866만","원일짱":"225억 4050만","레몬맛소다":"224억 7874만","댕그랑":"174억 7421만","킴쭈이":"159억 9363만","크롱v":"159억 7273만","설탕우유":"147억 6026만","쑤수슈퍼노바":"136억 1019만","지뚜야":"116억 853만","동고둥이":"미참여","응새":"미참여"} },
-    { id:"b9", date:"06/17", type:"수련장", scores:{"혁빡":"2078만 1984","싫은디":"1666만 5105","낭심에한방":"1580만 8167","제빙그켬":"1470만 6786","도세준":"1470만 6429","제로v":"1209만 7011","G존더코":"1127만 1201","별샷":"1099만 8900","송이주":"964만 761","킴서현":"963만 4548","ilrain":"959만 2032","디듣":"958만 2342","쫜득쿠키":"909만 6726","원일짱":"905만 1117","좋은디":"861만 234","콩프리다용":"838만 1790","엔이티알":"763만 9845","클로델":"733만 1568","솔신":"623만 2104","레몬맛소다":"622만 1178","네번째밤":"538만 3368","쑤수슈퍼노바":"533만 421","크롱v":"523만 5936","댕그랑":"507만 4527","지뚜야":"397만 1745","킴쭈이":"385만 9263","설탕우유":"242만 5878","동고둥이":"미참여","응새":"미참여"} },
-    { id:"b10", date:"06/21", type:"토벌전", scores:{} },
-    { id:"b11", date:"06/22", type:"대항전", scores:{"도세준":"2473억 5003만","제빙그켬":"1969억 6113만","제로v":"1210억 9775만","혁빡":"1190억 4737만","별샷":"1085억 3472만","싫은디":"1072억 3844만","낭심에한방":"1011억 3527만","솔신":"903억 3136만","G존더코":"902억 6364만","좋은디":"890억 1882만","콩프리다용":"870억 8665만","ilrain":"644억 4079만","엔이티알":"510억 1401만","킴서현":"491억 5789만","송이주":"450억 1588만","레몬맛소다":"413억 8226만","쫜득쿠키":"390억 6503만","디듣":"384억 2205만","클로델":"336억 378만","네번째밤":"319억 6651만","원일짱":"253억 8806만","응새":"239억 4160만","댕그랑":"202억 1522만","쑤수슈퍼노바":"199억 9220만","킴쭈이":"192억 3139만","크롱v":"171억 1921만","설탕우유":"166억 8158만","지뚜야":"118억 3579만","동고둥이":"미참여"} },
-    { id:"b12", date:"06/28", type:"토벌전", scores:{} },
-    { id:"b13", date:"07/01", type:"수련장", scores:{"혁빡":"2079만 5631","싫은디":"1701만 8103","낭심에한방":"1641만 7008","제빙그켬":"1557만 8796","제로v":"1458만 9468","도세준":"1425만 8055","G존더코":"1310만 6529","별샷":"1272만 4719","띵띵띵띵띵띵":"1264만 1322","원일짱":"1184만 9442","킴서현":"1168만 191","송이주":"1021만 9431","쫜득쿠키":"1011만 5919","짱득춘":"951만 2601","콩프리다용":"947만 3268","ilrain":"941만 5470","좋은디":"941만 4324","디듣":"891만 300","솔신":"889만 4628","엔이티알":"776만 6268","클로델":"754만 6434","크롱v":"631만 7361","레몬맛소다":"554만 2518","쑤수슈퍼노바":"530만 1477","네번째밤":"506만 4372","킴쭈이":"488만 8425","설탕우유":"456만 846","응새":"452만 1162","지뚜야":"397만 3191","댕그랑":"미참여"} },
-    { id:"b14", date:"07/05", type:"토벌전", scores:{} },
-    { id:"b15", date:"07/06", type:"대항전", scores:{"제빙그켬":"3794억 9526만","도세준":"2619억 8315만","띵띵띵띵띵띵":"2146억 898만","제로v":"1762억 1036만","혁빡":"1716억 2471만","별샷":"1427억 9885만","싫은디":"1384억 1454만","낭심에한방":"1358억 4352만","솔신":"1261억 8693만","G존더코":"1226억 573만","킴서현":"1178억 260만","좋은디":"1091억 3925만","짱득춘":"1085억 1968만","엔이티알":"899억 3814만","ilrain":"817억 5833만","콩프리다용":"704억 8472만","디듣":"674억 181만","레몬맛소다":"647억 3380만","네번째밤":"632억 9157만","클로델":"623억 6897만","송이주":"613억 4433만","쫜득쿠키":"501억 5630만","원일짱":"453억 9503만","쑤수슈퍼노바":"296억 7031만","응새":"275억 189만","댕그랑":"272억 375만","크롱v":"271억 8597만","지뚜야":"175억 2797만","킴쭈이":"미참여","북부멋쟁이":"참여불가"} }
+    { id:"b1", date:"05/31", type:"토벌전", power:["도세준","제빙그켬","띵띵띵띵띵띵","동고둥이","제로v","짱득춘","혁빡","별샷","솔신","싫은디","낭심에한방","콩프리다용","암살도령","엔이티알","킴서현","G존더코","송이주","디듣","클로델","ilrain","레몬맛소다","네번째밤","쫜득쿠키","설탕우유","원일짱","킴쭈이","쑤수슈퍼노바","크롱v","댕그랑","지뚜야"], scores:{} },
+    { id:"b2", date:"06/01", type:"대항전", power:["도세준","제빙그켬","띵띵띵띵띵띵","동고둥이","제로v","짱득춘","혁빡","별샷","솔신","싫은디","낭심에한방","콩프리다용","암살도령","엔이티알","킴서현","G존더코","송이주","디듣","클로델","ilrain","레몬맛소다","네번째밤","쫜득쿠키","설탕우유","원일짱","킴쭈이","쑤수슈퍼노바","크롱v","댕그랑","지뚜야"], scores:{} },
+    { id:"b3", date:"06/03", type:"길드보스", power:["도세준","제빙그켬","동고둥이","제로v","혁빡","짱득춘","별샷","솔신(미참여)","싫은디","낭심에한방","암살도령","콩프리다용","킴서현","엔이티알","송이주","G존더코","디듣","클로델","ilrain","레몬맛소다","네번째밤","원일짱","쫜득쿠키","설탕우유","킴쭈이","크롱v","쑤수슈퍼노바","댕그랑","지뚜야"], scores:{} },
+    { id:"b4", date:"06/07", type:"토벌전", power:["도세준","제빙그켬","동고둥이","제로v","혁빡","짱득춘","별샷","솔신","싫은디","낭심에한방","암살도령","콩프리다용","킴서현","엔이티알","디듣","G존더코","ilrain","송이주","클로델","레몬맛소다","네번째밤","쫜득쿠키","원일짱","설탕우유","킴쭈이","크롱v","댕그랑","쑤수슈퍼노바","지뚜야"], scores:{} },
+    { id:"b5", date:"06/08", type:"대항전", power:["도세준","제빙그켬","동고둥이","제로v","혁빡","짱득춘","별샷","솔신","싫은디","낭심에한방","콩프리다용","암살도령","킴서현","엔이티알","디듣","G존더코","송이주","ilrain","클로델","레몬맛소다","쫜득쿠키","네번째밤","원일짱","설탕우유","킴쭈이","크롱v","댕그랑","쑤수슈퍼노바","지뚜야"], scores:{"도세준":"2067억 7600만","제빙그켬":"1682억 8802만","혁빡":"1195억 8982만","제로v":"1056억 2480만","별샷":"1035억 297만","동고둥이":"1026억 1649만","싫은디":"798억 9274만","솔신":"661억 8932만","짱득춘":"634억 6295만","콩프리다용":"527억 9716만","낭심에한방":"498억 3991만","암살도령":"494억 2946만","ilrain":"404억 5582만","G존더코":"387억 3041만","킴서현":"384억 5377만","엔이티알":"380억 217만","송이주":"310억 8303만","클로델":"298억 5017만","쫜득쿠키":"262억 4672만","네번째밤":"256억 2982만","디듣":"256억 2233만","레몬맛소다":"247억 9078만","원일짱":"196억 6255만","댕그랑":"163억 7577만","설탕우유":"148억 5928만","킴쭈이":"142억 2889만","크롱v":"136억 4281만","쑤수슈퍼노바":"132억 9104만","지뚜야":"116억 3871만"} },
+    { id:"b6", date:"06/10", type:"길드보스", power:["도세준","제빙그켬","동고둥이","제로v","혁빡","짱득춘","별샷","솔신","싫은디","낭심에한방","암살도령","콩프리다용","킴서현","엔이티알","디듣","G존더코","ilrain","송이주","클로델","레몬맛소다","네번째밤","쫜득쿠키","원일짱","설탕우유","킴쭈이","크롱v","댕그랑","쑤수슈퍼노바","지뚜야"], scores:{"제빙그켬":"1259억 8461만","도세준":"1257억 4716만","동고둥이":"819억 3010만","별샷":"723억 7464만","혁빡":"687억 3916만","제로v":"631억 8908만","짱득춘":"462억 5612만","솔신":"460억 7709만","싫은디":"443억 3437만","콩프리다용":"355억 4886만","낭심에한방":"340억 2087만","G존더코":"309억 6217만","ilrain":"298억 7941만","송이주":"291억 9294만","암살도령":"287억 3467만","킴서현":"282억 9059만","엔이티알":"267억 3427만","네번째밤":"219억 2666만","클로델":"211억 8563만","쫜득쿠키":"205억 7221만","원일짱":"204억 3493만","디듣":"197억 1218만","레몬맛소다":"178억 4905만","댕그랑":"143억 9981만","설탕우유":"138억 9012만","킴쭈이":"115억 6795만","크롱v":"114억 5099만","지뚜야":"103억 7845만","쑤수슈퍼노바":"101억 8125만"} },
+    { id:"b7", date:"06/14", type:"토벌전", power:["도세준","제빙그켬","동고둥이","제로v","혁빡","별샷","싫은디","솔신","낭심에한방","콩프리다용","좋은디","G존더코","엔이티알","킴서현","디듣","ilrain","레몬맛소다","송이주","클로델","쫜득쿠키","원일짱","네번째밤","응새","설탕우유","크롱v","킴쭈이","댕그랑","쑤수슈퍼노바","지뚜야"], scores:{} },
+    { id:"b8", date:"06/15", type:"대항전", power:["도세준","제빙그켬","동고둥이","제로v","혁빡","별샷","싫은디","솔신","낭심에한방","콩프리다용","좋은디","G존더코","엔이티알","킴서현","디듣","ilrain","레몬맛소다","송이주","클로델","쫜득쿠키","원일짱","네번째밤","설탕우유","크롱v","킴쭈이","댕그랑","쑤수슈퍼노바","지뚜야","응새"], scores:{"도세준":"1987억 7208만","제빙그켬":"1630억 5727만","혁빡":"1172억 3143만","제로v":"1084억 7829만","별샷":"1066억 4135만","싫은디":"1024억 8263만","솔신":"880억 5675만","낭심에한방":"702억 1612만","콩프리다용":"624억 5968만","좋은디":"612억 7992만","ilrain":"544억 876만","G존더코":"506억 2025만","엔이티알":"424억 7281만","킴서현":"413억 332만","디듣":"410억 9274만","송이주":"390억 4364만","클로델":"324억 1333만","쫜득쿠키":"318억 872만","네번째밤":"293억 3866만","원일짱":"225억 4050만","레몬맛소다":"224억 7874만","댕그랑":"174억 7421만","킴쭈이":"159억 9363만","크롱v":"159억 7273만","설탕우유":"147억 6026만","쑤수슈퍼노바":"136억 1019만","지뚜야":"116억 853만","동고둥이":"미참여","응새":"미참여"} },
+    { id:"b9", date:"06/17", type:"수련장", power:["도세준","제빙그켬","제로v","동고둥이","혁빡","별샷","싫은디","솔신","낭심에한방","콩프리다용","좋은디","엔이티알","G존더코","킴서현","디듣","레몬맛소다","ilrain","송이주","클로델","쫜득쿠키","원일짱","네번째밤","설탕우유","크롱v","킴쭈이","댕그랑","쑤수슈퍼노바","지뚜야","응새"], scores:{"혁빡":"2078만 1984","싫은디":"1666만 5105","낭심에한방":"1580만 8167","제빙그켬":"1470만 6786","도세준":"1470만 6429","제로v":"1209만 7011","G존더코":"1127만 1201","별샷":"1099만 8900","송이주":"964만 761","킴서현":"963만 4548","ilrain":"959만 2032","디듣":"958만 2342","쫜득쿠키":"909만 6726","원일짱":"905만 1117","좋은디":"861만 234","콩프리다용":"838만 1790","엔이티알":"763만 9845","클로델":"733만 1568","솔신":"623만 2104","레몬맛소다":"622만 1178","네번째밤":"538만 3368","쑤수슈퍼노바":"533만 421","크롱v":"523만 5936","댕그랑":"507만 4527","지뚜야":"397만 1745","킴쭈이":"385만 9263","설탕우유":"242만 5878","동고둥이":"미참여","응새":"미참여"} },
+    { id:"b10", date:"06/21", type:"토벌전", power:["도세준","제빙그켬","띵띵띵띵띵띵","제로v","동고둥이","싫은디","혁빡","별샷","솔신","낭심에한방","좋은디","콩프리다용","엔이티알","G존더코","킴서현","레몬맛소다","디듣","송이주","ilrain","클로델","쫜득쿠키","네번째밤","원일짱","응새","설탕우유","킴쭈이","크롱v","댕그랑","쑤수슈퍼노바","지뚜야"], scores:{} },
+    { id:"b11", date:"06/22", type:"대항전", power:["도세준","제빙그켬","제로v","동고둥이","싫은디","혁빡","별샷","솔신","낭심에한방","좋은디","콩프리다용","엔이티알","G존더코","킴서현","레몬맛소다","디듣","송이주","ilrain","클로델","쫜득쿠키","네번째밤","원일짱","응새","설탕우유","킴쭈이","크롱v","댕그랑","쑤수슈퍼노바","지뚜야","띵띵띵띵띵띵"], scores:{"도세준":"2473억 5003만","제빙그켬":"1969억 6113만","제로v":"1210억 9775만","혁빡":"1190억 4737만","별샷":"1085억 3472만","싫은디":"1072억 3844만","낭심에한방":"1011억 3527만","솔신":"903억 3136만","G존더코":"902억 6364만","좋은디":"890억 1882만","콩프리다용":"870억 8665만","ilrain":"644억 4079만","엔이티알":"510억 1401만","킴서현":"491억 5789만","송이주":"450억 1588만","레몬맛소다":"413억 8226만","쫜득쿠키":"390억 6503만","디듣":"384억 2205만","클로델":"336억 378만","네번째밤":"319억 6651만","원일짱":"253억 8806만","응새":"239억 4160만","댕그랑":"202억 1522만","쑤수슈퍼노바":"199억 9220만","킴쭈이":"192억 3139만","크롱v":"171억 1921만","설탕우유":"166억 8158만","지뚜야":"118억 3579만","동고둥이":"미참여"} },
+    { id:"b12", date:"06/28", type:"토벌전", power:["도세준","제빙그켬","띵띵띵띵띵띵","제로v","혁빡","별샷","싫은디","짱득춘","솔신","낭심에한방","좋은디","엔이티알","킴서현","G존더코","콩프리다용","송이주","레몬맛소다","디듣","클로델","ilrain","쫜득쿠키","원일짱","네번째밤","응새","크롱v","킴쭈이","설탕우유","댕그랑","쑤수슈퍼노바","지뚜야"], scores:{} },
+    { id:"b13", date:"07/01", type:"수련장", power:["도세준","제빙그켬","띵띵띵띵띵띵","제로v","혁빡","별샷","싫은디","짱득춘","솔신","낭심에한방","좋은디","엔이티알","킴서현","G존더코","콩프리다용","송이주","레몬맛소다","디듣","클로델","ilrain","쫜득쿠키","원일짱","네번째밤","응새","크롱v","킴쭈이","설탕우유","댕그랑","쑤수슈퍼노바","지뚜야"], scores:{"혁빡":"2079만 5631","싫은디":"1701만 8103","낭심에한방":"1641만 7008","제빙그켬":"1557만 8796","제로v":"1458만 9468","도세준":"1425만 8055","G존더코":"1310만 6529","별샷":"1272만 4719","띵띵띵띵띵띵":"1264만 1322","원일짱":"1184만 9442","킴서현":"1168만 191","송이주":"1021만 9431","쫜득쿠키":"1011만 5919","짱득춘":"951만 2601","콩프리다용":"947만 3268","ilrain":"941만 5470","좋은디":"941만 4324","디듣":"891만 300","솔신":"889만 4628","엔이티알":"776만 6268","클로델":"754만 6434","크롱v":"631만 7361","레몬맛소다":"554만 2518","쑤수슈퍼노바":"530만 1477","네번째밤":"506만 4372","킴쭈이":"488만 8425","설탕우유":"456만 846","응새":"452만 1162","지뚜야":"397만 3191","댕그랑":"미참여"} },
+    { id:"b14", date:"07/05", type:"토벌전", power:["도세준","제빙그켬","띵띵띵띵띵띵","제로v","북부멋쟁이","혁빡","별샷","짱득춘","싫은디","솔신","낭심에한방","엔이티알","좋은디","킴서현","G존더코","콩프리다용","클로델","ilrain","디듣","송이주","레몬맛소다","네번째밤","쫜득쿠키","원일짱","응새","크롱v","킴쭈이","댕그랑","쑤수슈퍼노바","지뚜야"], scores:{} },
+    { id:"b15", date:"07/06", type:"대항전", power:["도세준","제빙그켬","띵띵띵띵띵띵","제로v","혁빡","별샷","짱득춘","싫은디","솔신","낭심에한방","엔이티알","좋은디","킴서현","G존더코","콩프리다용","클로델","ilrain","디듣","송이주","레몬맛소다","네번째밤","쫜득쿠키","원일짱","응새","크롱v","킴쭈이","댕그랑","쑤수슈퍼노바","지뚜야","북부멋쟁이"], scores:{"제빙그켬":"3794억 9526만","도세준":"2619억 8315만","띵띵띵띵띵띵":"2146억 898만","제로v":"1762억 1036만","혁빡":"1716억 2471만","별샷":"1427억 9885만","싫은디":"1384억 1454만","낭심에한방":"1358억 4352만","솔신":"1261억 8693만","G존더코":"1226억 573만","킴서현":"1178억 260만","좋은디":"1091억 3925만","짱득춘":"1085억 1968만","엔이티알":"899억 3814만","ilrain":"817억 5833만","콩프리다용":"704억 8472만","디듣":"674억 181만","레몬맛소다":"647억 3380만","네번째밤":"632억 9157만","클로델":"623억 6897만","송이주":"613억 4433만","쫜득쿠키":"501억 5630만","원일짱":"453억 9503만","쑤수슈퍼노바":"296억 7031만","응새":"275억 189만","댕그랑":"272억 375만","크롱v":"271억 8597만","지뚜야":"175억 2797만","킴쭈이":"미참여","북부멋쟁이":"참여불가"} }
   ];
   S.currentId = 'b15';
 }
@@ -420,14 +437,54 @@ function loadLocal(){
 }
 
 // ── helpers ──
-function pRank(name){ const i=S.members.indexOf(name); return i===-1?null:i+1; }
-function score(contentRank,name){ const p=pRank(name); return p===null?0:p-contentRank; }
+// 대결별 투력순위: 화살표로 조정한 순서(bt.power)가 있으면 그걸 쓰고, 없으면 길드원 순서로 폴백
+function powerOrder(bt){ return (bt && bt.power && bt.power.length) ? bt.power : S.members; }
+function pRank(name,bt){ const i=powerOrder(bt).indexOf(name); return i===-1?null:i+1; }
+function score(contentRank,name,bt){ const p=pRank(name,bt); return p===null?0:p-contentRank; }
 function sc(s){ return s>0?'pos':s<0?'neg':'zero'; }
 function ss(s){ return s>0?'+'+s:String(s); }
 function curBattle(){ return S.battles.find(b=>b.id===S.currentId)||S.battles[0]||null; }
 const BATTLE_TYPES = ['토벌전','대항전','길드보스','수련장'];
 const TYPE_CLASS = {'토벌전':'tobul','대항전':'daehang','길드보스':'boss','수련장':'suryun'};
 function tagCls(type){ return 'tag-'+(TYPE_CLASS[type]||'daehang'); }
+
+// ── 직업 ──
+const JOB_LIST = ['히어로','비숍','닼나','섀도어','썬콜','보마','신궁','나로','팔라딘','불독','바이퍼','캡틴'];
+const JOB_COLORS = {
+  '히어로':'#f06565','비숍':'#f5c842','닼나':'#9b7ff5','섀도어':'#b08cf5',
+  '썬콜':'#ff9944','보마':'#3ecf8e','신궁':'#2dd4bf','나로':'#5b8af5','팔라딘':'#6699ff',
+  '불독':'#e07b3a','바이퍼':'#e05a8a','캡틴':'#4db8d4'
+};
+function jobBadge(job){
+  if(!job) return '';
+  const c = JOB_COLORS[job]||'var(--t2)';
+  return `<span class="job-badge" style="color:${c};background:${c}22">${job}</span>`;
+}
+function setJob(name,job){
+  if(!S.jobs) S.jobs = {};
+  if(job) S.jobs[name] = job; else delete S.jobs[name];
+  save(); renderMembersPage();
+}
+
+// ── MVP 배지 (대결마다 diff 1위에게 ★ 누적) ──
+function computeMvpCounts(){
+  const counts = {};
+  S.battles.forEach(bt=>{
+    const ranked = contentRanking(bt);
+    let maxSc = 0, mvpName = null;
+    ranked.forEach(r=>{
+      const s = score(r.rank, r.name, bt);
+      if(s > maxSc){ maxSc = s; mvpName = r.name; }
+    });
+    if(mvpName) counts[mvpName] = (counts[mvpName]||0) + 1;
+  });
+  return counts;
+}
+function mvpBadge(name,mvpCounts){
+  const n = mvpCounts[name];
+  if(!n) return '';
+  return `<span class="mvp-badge" title="MVP ${n}회">★×${n}</span>`;
+}
 
 // ── 점수 파싱 / 컨텐츠순위 계산 ──
 function parseScoreVal(str){
@@ -455,6 +512,7 @@ function contentRanking(bt){
 //  DASHBOARD
 // ══════════════════════════════════════════════
 function renderDashboard(){
+  const mvpCounts = computeMvpCounts();
   const bt = curBattle();
   const curType = bt?.type || BATTLE_TYPES[0];
   const typeOptions = BATTLE_TYPES.map(t=>{
@@ -471,10 +529,11 @@ function renderDashboard(){
   if(bt){
     const ranked = contentRanking(bt);
     const rankMap = new Map(ranked.map(r=>[r.name,r]));
-    const allRows = S.members.map((name,i)=>{
+    const order = powerOrder(bt);
+    const allRows = order.map((name,i)=>{
       const rInfo = rankMap.get(name);
       const rRank = rInfo ? rInfo.rank : null;
-      return {name, pRank:i+1, rRank, sc: rRank!==null ? score(rRank,name) : null};
+      return {name, pRank:i+1, rRank, sc: rRank!==null ? score(rRank,name,bt) : null};
     });
     const filled = allRows.filter(r=>r.rRank!==null);
     const pos = filled.filter(r=>r.sc>0).length;
@@ -492,13 +551,13 @@ function renderDashboard(){
     </div>`;
     const makeRow = r => {
       const rowCls = r.sc>0?'rpos':r.sc<0?'rneg':'rzero';
-      const diff = r.rRank!==null ? r.pRank-r.rRank : null;
+      const diff = r.sc;
       const diffStr = diff===null?'—':diff>0?`▲${diff}`:diff<0?`▼${Math.abs(diff)}`:'=';
       const diffCol = diff===null?'var(--t3)':diff>0?'var(--green)':diff<0?'var(--red)':'var(--t3)';
       return `<div class="row ${rowCls}">
         <div class="cell" style="font-size:12px;color:var(--text);font-weight:700">${r.pRank}위</div>
         <div class="cell cr${r.rRank&&r.rRank<=3?' top3':''}">${r.rRank?r.rRank+'위':'—'}</div>
-        <div class="cell" style="font-size:14px;font-weight:500">${r.name}</div>
+        <div class="cell" style="font-size:14px;font-weight:500;gap:5px;flex-wrap:wrap">${r.name}${mvpBadge(r.name,mvpCounts)}${jobBadge(S.jobs&&S.jobs[r.name])}</div>
         <div class="cell cdiff hide-m" style="color:${diffCol};justify-content:center">${diffStr}</div>
         <div class="cell cscore">${r.sc!==null?`<span class="sv ${sc(r.sc)}">${ss(r.sc)}</span>`:'<span class="sv zero">—</span>'}</div>
       </div>`;
@@ -521,7 +580,7 @@ function renderDashboard(){
     <div class="result-panel">
       <div class="rp-head">
         <div class="rp-title"><span class="tag ${tagCls(bt.type)}">${bt.type}</span>${bt.date} 결과</div>
-        <div style="font-size:12px;color:var(--t3)">${filled.length}/${S.members.length}</div>
+        <div style="font-size:12px;color:var(--t3)">${filled.length}/${order.length}</div>
       </div>
       <div class="two-col-grid">
         <div style="border-right:1px solid var(--border)">${colHead}${left}</div>
@@ -557,34 +616,46 @@ function dashTypeChange(type){
 let openPanels = new Set(); // 펼쳐진 패널 ID 기억
 
 function renderEntryPage(){
+  const mvpCounts = computeMvpCounts();
   const panels = [...S.battles].reverse().map(bt=>{
     const tCls = tagCls(bt.type);
     const ranked = contentRanking(bt);
     const rankMap = new Map(ranked.map(r=>[r.name,r.rank]));
-    const rows = S.members.map((name,i)=>{
+    const order = powerOrder(bt);
+    const rows = order.map((name,i)=>{
       const pr = i+1;
       const raw = (bt.scores && bt.scores[name]) || '';
       const crank = rankMap.get(name);
-      const s = crank ? score(crank,name) : null;
+      const s = crank ? score(crank,name,bt) : null;
       return `<div class="score-row${raw?' filled':''}">
         <div class="sr-rank${pr<=3?' top3':''}">${pr}</div>
-        <div class="sr-name">${name}</div>
+        <div class="sr-arrows">
+          <button class="sr-arrow-btn" onclick="moveBattlePower('${bt.id}','${name}',-1)" ${i===0?'disabled':''} title="투력순위 위로">▲</button>
+          <button class="sr-arrow-btn" onclick="moveBattlePower('${bt.id}','${name}',1)" ${i===order.length-1?'disabled':''} title="투력순위 아래로">▼</button>
+        </div>
+        <div class="sr-name">${name}${mvpBadge(name,mvpCounts)}${jobBadge(S.jobs&&S.jobs[name])}</div>
         <input class="sr-input" value="${raw.replace(/"/g,'&quot;')}" placeholder="점수 입력 (예: 100억 2000만)" onchange="setScore('${bt.id}','${name}',this.value)">
         <div class="sr-crank${crank&&crank<=3?' top3':''}">${crank?crank+'위':'-'}</div>
         <div class="sr-diff${s===null?'':' '+sc(s)}">${s===null?'':ss(s)}</div>
       </div>`;
     }).join('');
     const isOpen = openPanels.has(bt.id);
+    const guildRankRow = `<div class="guild-rank-row" onclick="event.stopPropagation()">
+      <span class="grr-label">🏆 길드 전체 순위</span>
+      <input class="grr-input" type="number" min="1" value="${bt.guildRank||''}" placeholder="-" onchange="setGuildRank('${bt.id}',this.value)">
+      <span class="grr-unit">위</span>
+    </div>`;
     return `<div class="battle-panel${isOpen?'':' collapsed'}" id="panel-${bt.id}">
       <div class="panel-head" onclick="togglePanel('${bt.id}')">
         <div class="panel-head-left">
           <span class="collapse-arrow">▼</span>
           <div class="panel-head-title"><span class="tag ${tCls}">${bt.type}</span>${bt.date}</div>
-          <span style="font-size:11px;color:var(--t3)">${ranked.length}/${S.members.length}</span>
+          <span style="font-size:11px;color:var(--t3)">${ranked.length}/${order.length}</span>
+          <span style="font-size:11px;color:var(--t3)">전체 ${bt.guildRank?bt.guildRank+'위':'-위'}</span>
         </div>
         <button class="btn btn-sm btn-danger" onclick="deleteBattle(event,'${bt.id}','${bt.date}','${bt.type}')">삭제</button>
       </div>
-      <div class="slots">${rows}</div>
+      <div class="slots">${guildRankRow}${rows}</div>
     </div>`;
   }).join('');
 
@@ -604,6 +675,28 @@ function setScore(bid,name,val){
   if(!bt.scores) bt.scores = {};
   val = val.trim();
   if(val) bt.scores[name] = val; else delete bt.scores[name];
+  save(); renderEntryPage();
+}
+
+function moveBattlePower(bid,name,dir){
+  const bt = S.battles.find(b=>b.id===bid); if(!bt) return;
+  if(!bt.power || !bt.power.length) bt.power = [...S.members];
+  const i = bt.power.indexOf(name); if(i===-1) return;
+  const ni = i+dir; if(ni<0 || ni>=bt.power.length) return;
+  [bt.power[i], bt.power[ni]] = [bt.power[ni], bt.power[i]];
+  save(); renderEntryPage();
+}
+
+function setGuildRank(bid,val){
+  const bt = S.battles.find(b=>b.id===bid); if(!bt) return;
+  val = String(val).trim();
+  if(val===''){ delete bt.guildRank; save(); renderEntryPage(); return; }
+  const n = parseInt(val,10);
+  if(!Number.isInteger(n) || n<1){
+    showToast('길드 순위는 1 이상 숫자로 입력해주세요');
+    renderEntryPage(); return;
+  }
+  bt.guildRank = n;
   save(); renderEntryPage();
 }
 
@@ -695,7 +788,13 @@ function renderMembersPage(){
       ${S.members.map((n,i)=>`
       <div class="mt-row">
         <div style="font-family:'Noto Sans KR',sans-serif;font-size:13px;font-weight:700;color:var(--text)">${i+1}위</div>
-        <div><input class="name-edit" value="${n}" id="mn-${i}" onblur="upName(${i},this.value)"></div>
+        <div>
+          <input class="name-edit" value="${n}" id="mn-${i}" onblur="upName(${i},this.value)">
+          <select class="job-sel" onchange="setJob('${n}',this.value)">
+            <option value="">직업 선택</option>
+            ${JOB_LIST.map(j=>`<option value="${j}" ${(S.jobs&&S.jobs[n])===j?'selected':''}>${j}</option>`).join('')}
+          </select>
+        </div>
         <div style="display:flex;gap:5px">
           <button class="btn btn-sm" onclick="moveM(${i},-1)" ${i===0?'disabled':''}>↑</button>
           <button class="btn btn-sm" onclick="moveM(${i},1)" ${i===S.members.length-1?'disabled':''}>↓</button>
