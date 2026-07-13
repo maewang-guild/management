@@ -152,7 +152,7 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
 .mt-row:last-child{border-bottom:none}
 .mt-row:hover{background:var(--s2)}
 .name-edit{background:transparent;border:none;color:var(--text);font-size:14px;font-family:'Noto Sans KR',sans-serif;width:100%;outline:none}
-.job-sel{background:var(--s2);border:1px solid var(--border);color:var(--t2);font-size:11px;font-family:'Noto Sans KR',sans-serif;cursor:pointer;outline:none;padding:2px 5px;border-radius:5px;width:100%;margin-top:2px}
+.job-sel{background:var(--s2);border:1px solid var(--border);color:var(--t2);font-size:11px;font-family:'Noto Sans KR',sans-serif;cursor:pointer;outline:none;padding:3px 5px;border-radius:5px;width:74px;flex-shrink:0}
 .job-sel:focus{border-color:var(--blue)}
 .job-sel option{background:#1c2030}
 .job-badge{font-size:10px;font-weight:600;padding:1px 6px;border-radius:10px;white-space:nowrap;flex-shrink:0}
@@ -569,6 +569,7 @@ function renderDashboard(){
 
     body = `
     <div class="summary-row">
+      <div class="chip"><div class="chip-label">🏆 길드 전체 순위</div><div class="chip-val" style="color:${bt.guildRank?'var(--gold)':'var(--t3)'}">${bt.guildRank?bt.guildRank+'위':'-'}</div></div>
       <div class="chip"><div class="chip-label">플러스</div><div class="chip-val" style="color:var(--green)">${pos}명</div></div>
       <div class="chip"><div class="chip-label">유지</div><div class="chip-val" style="color:var(--t2)">${zero}명</div></div>
       <div class="chip"><div class="chip-label">마이너스</div><div class="chip-val" style="color:var(--red)">${neg}명</div></div>
@@ -799,8 +800,8 @@ function renderMembersPage(){
       ${S.members.map((n,i)=>`
       <div class="mt-row">
         <div style="font-family:'Noto Sans KR',sans-serif;font-size:13px;font-weight:700;color:var(--text)">${i+1}위</div>
-        <div>
-          <input class="name-edit" value="${n}" id="mn-${i}" onblur="upName(${i},this.value)">
+        <div style="display:flex;align-items:center;gap:6px">
+          <input class="name-edit" value="${n}" id="mn-${i}" onblur="upName(${i},this.value)" style="flex:1;min-width:0">
           <select class="job-sel" onchange="setJob('${n}',this.value)">
             <option value="">직업 선택</option>
             ${JOB_LIST.map(j=>`<option value="${j}" ${(S.jobs&&S.jobs[n])===j?'selected':''}>${j}</option>`).join('')}
