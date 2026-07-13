@@ -70,11 +70,11 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
 .cell{padding:11px 18px;display:flex;align-items:center;font-size:13px}
 .cell:first-child{padding-left:15px}
 .cn{font-family:'Noto Sans KR',sans-serif;font-size:12px;color:var(--t3)}
-.cr{font-family:'Noto Sans KR',sans-serif;font-size:13px;font-weight:700;color:var(--t2)}
+.cr{font-family:'Noto Sans KR',sans-serif;font-size:13px;font-weight:700;color:var(--t2);justify-content:flex-end;font-variant-numeric:tabular-nums}
 .cr.top3{color:var(--gold)}
 .cdiff{font-size:11px;font-family:'Space Grotesk',sans-serif}
 .cscore{justify-content:flex-end}
-.sv{font-family:'Noto Sans KR',sans-serif;font-size:16px;font-weight:700}
+.sv{font-family:'Noto Sans KR',sans-serif;font-size:16px;font-weight:700;font-variant-numeric:tabular-nums}
 .sv.pos{color:var(--green)}.sv.neg{color:var(--red)}.sv.zero{color:var(--t3)}
 
 /* 공통 버튼 */
@@ -98,7 +98,9 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
 .collapse-arrow{font-size:11px;color:var(--t3);transition:transform .2s}
 .battle-panel.collapsed .collapse-arrow{transform:rotate(-90deg)}
 .battle-panel.collapsed .slots{display:none}
+.battle-panel.collapsed .panel-footer{display:none}
 .battle-panel.collapsed .panel-head{border-bottom:none}
+.panel-footer{padding:12px 16px;border-top:1px solid var(--border);display:flex;justify-content:flex-end}
 .slots{padding:6px 10px}
 .guild-rank-row{display:flex;align-items:center;gap:8px;padding:9px 12px;margin:2px 0 8px;background:var(--s2);border:1px solid var(--border2);border-radius:8px}
 .grr-label{font-size:12px;color:var(--t2);flex:1}
@@ -545,7 +547,7 @@ function renderDashboard(){
     const wst  = filled.find(r=>r.sc===minSc&&minSc<0);
 
     const colHead = `<div class="row-head">
-      <div>투력순위</div><div>성과순위</div><div>닉네임</div>
+      <div style="text-align:right">투력순위</div><div style="text-align:right">성과순위</div><div>닉네임</div>
       <div class="hide-m" style="text-align:center">차이</div>
       <div style="text-align:right">점수</div>
     </div>`;
@@ -555,7 +557,7 @@ function renderDashboard(){
       const diffStr = diff===null?'—':diff>0?`▲${diff}`:diff<0?`▼${Math.abs(diff)}`:'=';
       const diffCol = diff===null?'var(--t3)':diff>0?'var(--green)':diff<0?'var(--red)':'var(--t3)';
       return `<div class="row ${rowCls}">
-        <div class="cell" style="font-size:12px;color:var(--text);font-weight:700">${r.pRank}위</div>
+        <div class="cell" style="font-size:12px;color:var(--text);font-weight:700;justify-content:flex-end;font-variant-numeric:tabular-nums">${r.pRank}위</div>
         <div class="cell cr${r.rRank&&r.rRank<=3?' top3':''}">${r.rRank?r.rRank+'위':'—'}</div>
         <div class="cell" style="font-size:14px;font-weight:500;gap:5px;flex-wrap:wrap">${r.name}${mvpBadge(r.name,mvpCounts)}${jobBadge(S.jobs&&S.jobs[r.name])}</div>
         <div class="cell cdiff hide-m" style="color:${diffCol};justify-content:center">${diffStr}</div>
@@ -656,6 +658,9 @@ function renderEntryPage(){
         <button class="btn btn-sm btn-danger" onclick="deleteBattle(event,'${bt.id}','${bt.date}','${bt.type}')">삭제</button>
       </div>
       <div class="slots">${guildRankRow}${rows}</div>
+      <div class="panel-footer">
+        <button class="btn btn-prim" onclick="saveBattlePanel('${bt.id}')">✓ 저장하기</button>
+      </div>
     </div>`;
   }).join('');
 
@@ -698,6 +703,12 @@ function setGuildRank(bid,val){
   }
   bt.guildRank = n;
   save(); renderEntryPage();
+}
+
+function saveBattlePanel(bid){
+  const bt = S.battles.find(b=>b.id===bid); if(!bt) return;
+  save();
+  showToast(bt.date+' '+bt.type+' 저장 완료!');
 }
 
 function togglePanel(id){
