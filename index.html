@@ -60,8 +60,8 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
 .tag-boss{background:rgba(245,200,66,.15);color:var(--gold);border:1px solid rgba(245,200,66,.28)}
 .tag-suryun{background:rgba(91,138,245,.12);color:var(--blue);border:1px solid rgba(91,138,245,.28)}
 
-.row-head{display:grid;grid-template-columns:58px 52px 1fr 64px 70px;padding:9px 18px;font-size:11px;color:var(--t3);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)}
-.row{display:grid;grid-template-columns:58px 52px 1fr 64px 70px;border-bottom:1px solid var(--border);transition:background .1s}
+.row-head{display:grid;grid-template-columns:66px 60px 1fr 64px 108px;padding:9px 18px;font-size:11px;color:var(--t3);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)}
+.row{display:grid;grid-template-columns:66px 60px 1fr 64px 108px;border-bottom:1px solid var(--border);transition:background .1s}
 .row:last-child{border-bottom:none}
 .row:hover{filter:brightness(1.12)}
 .row.rpos{background:var(--green-bg);border-left:3px solid var(--green)}
@@ -70,12 +70,11 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
 .cell{padding:11px 18px;display:flex;align-items:center;font-size:13px}
 .cell:first-child{padding-left:15px}
 .cn{font-family:'Noto Sans KR',sans-serif;font-size:12px;color:var(--t3)}
-.cr{font-family:'Noto Sans KR',sans-serif;font-size:13px;font-weight:700;color:var(--t2);justify-content:flex-end;font-variant-numeric:tabular-nums}
+.cr{font-family:'Noto Sans KR',sans-serif;font-size:12px;font-weight:700;color:var(--t2);justify-content:flex-end;font-variant-numeric:tabular-nums}
 .cr.top3{color:var(--gold)}
 .cdiff{font-size:11px;font-family:'Space Grotesk',sans-serif}
-.cscore{justify-content:flex-end}
-.sv{font-family:'Noto Sans KR',sans-serif;font-size:16px;font-weight:700;font-variant-numeric:tabular-nums}
-.sv.pos{color:var(--green)}.sv.neg{color:var(--red)}.sv.zero{color:var(--t3)}
+.cscore{justify-content:flex-end;padding-left:8px;padding-right:12px;overflow:hidden}
+.sv-raw{font-family:'Noto Sans KR',sans-serif;font-size:11px;font-weight:600;color:var(--text);white-space:nowrap;text-align:right}
 
 /* 공통 버튼 */
 .btn{background:var(--s2);border:1px solid var(--border2);color:var(--text);padding:7px 14px;border-radius:8px;font-size:13px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:all .15s}
@@ -210,7 +209,7 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
   .nav-hamburger{display:flex}
   .nav-cur-page{display:block}
   .battle-grid{grid-template-columns:1fr}
-  .row-head,.row{grid-template-columns:50px 44px 1fr 60px}
+  .row-head,.row{grid-template-columns:56px 50px 1fr 90px}
   .hide-m{display:none}
   .mt-head,.mt-row{grid-template-columns:44px 1fr auto}
   .two-col-grid{grid-template-columns:1fr}
@@ -462,6 +461,12 @@ function jobBadge(job){
   const c = JOB_COLORS[job]||'var(--t2)';
   return `<span class="job-badge" style="color:${c};background:${c}22">${job}</span>`;
 }
+function medalEmoji(rank){
+  if(rank===1) return '🥇';
+  if(rank===2) return '🥈';
+  if(rank===3) return '🥉';
+  return '🎖️';
+}
 function setJob(name,job){
   if(!S.jobs) S.jobs = {};
   if(job) S.jobs[name] = job; else delete S.jobs[name];
@@ -535,7 +540,7 @@ function renderDashboard(){
     const allRows = order.map((name,i)=>{
       const rInfo = rankMap.get(name);
       const rRank = rInfo ? rInfo.rank : null;
-      return {name, pRank:i+1, rRank, sc: rRank!==null ? score(rRank,name,bt) : null};
+      return {name, pRank:i+1, rRank, raw: rInfo?rInfo.raw:null, sc: rRank!==null ? score(rRank,name,bt) : null};
     });
     const filled = allRows.filter(r=>r.rRank!==null);
     const pos = filled.filter(r=>r.sc>0).length;
@@ -557,11 +562,11 @@ function renderDashboard(){
       const diffStr = diff===null?'—':diff>0?`▲${diff}`:diff<0?`▼${Math.abs(diff)}`:'=';
       const diffCol = diff===null?'var(--t3)':diff>0?'var(--green)':diff<0?'var(--red)':'var(--t3)';
       return `<div class="row ${rowCls}">
-        <div class="cell" style="font-size:12px;color:var(--text);font-weight:700;justify-content:flex-end;font-variant-numeric:tabular-nums">${r.pRank}위</div>
-        <div class="cell cr${r.rRank&&r.rRank<=3?' top3':''}">${r.rRank?r.rRank+'위':'—'}</div>
+        <div class="cell" style="font-size:12px;color:var(--text);font-weight:700;justify-content:flex-end;font-variant-numeric:tabular-nums;white-space:nowrap;padding-left:8px;padding-right:8px">${r.pRank}위</div>
+        <div class="cell cr${r.rRank&&r.rRank<=3?' top3':''}" style="white-space:nowrap;padding-left:8px;padding-right:8px">${r.rRank?r.rRank+'위':'—'}</div>
         <div class="cell" style="font-size:14px;font-weight:500;gap:5px;flex-wrap:wrap">${r.name}${mvpBadge(r.name,mvpCounts)}${jobBadge(S.jobs&&S.jobs[r.name])}</div>
         <div class="cell cdiff hide-m" style="color:${diffCol};justify-content:center">${diffStr}</div>
-        <div class="cell cscore">${r.sc!==null?`<span class="sv ${sc(r.sc)}">${ss(r.sc)}</span>`:'<span class="sv zero">—</span>'}</div>
+        <div class="cell cscore"><span class="sv-raw">${r.raw||'—'}</span></div>
       </div>`;
     };
     const left  = allRows.slice(0,15).map(makeRow).join('');
@@ -569,7 +574,7 @@ function renderDashboard(){
 
     body = `
     <div class="summary-row">
-      <div class="chip"><div class="chip-label">🏆 길드 전체 순위</div><div class="chip-val" style="color:${bt.guildRank?'var(--gold)':'var(--t3)'}">${bt.guildRank?bt.guildRank+'위':'-'}</div></div>
+      <div class="chip"><div class="chip-label">길드 전체 순위</div><div class="chip-val" style="color:${bt.guildRank?'var(--gold)':'var(--t3)'}">${bt.guildRank?medalEmoji(bt.guildRank)+' '+bt.guildRank+'위':'-'}</div></div>
       <div class="chip"><div class="chip-label">플러스</div><div class="chip-val" style="color:var(--green)">${pos}명</div></div>
       <div class="chip"><div class="chip-label">유지</div><div class="chip-val" style="color:var(--t2)">${zero}명</div></div>
       <div class="chip"><div class="chip-label">마이너스</div><div class="chip-val" style="color:var(--red)">${neg}명</div></div>
@@ -625,7 +630,7 @@ function renderEntryPage(){
     const ranked = contentRanking(bt);
     const rankMap = new Map(ranked.map(r=>[r.name,r.rank]));
     const order = powerOrder(bt);
-    const rows = order.map((name,i)=>{
+    const makeScoreRow = (name,i) => {
       const pr = i+1;
       const raw = (bt.scores && bt.scores[name]) || '';
       const crank = rankMap.get(name);
@@ -641,10 +646,12 @@ function renderEntryPage(){
         <div class="sr-crank${crank&&crank<=3?' top3':''}">${crank?crank+'위':'-'}</div>
         <div class="sr-diff${s===null?'':' '+sc(s)}">${s===null?'':ss(s)}</div>
       </div>`;
-    }).join('');
+    };
+    const rowsLeft  = order.slice(0,15).map((name,i)=>makeScoreRow(name,i)).join('');
+    const rowsRight = order.slice(15,30).map((name,i)=>makeScoreRow(name,i+15)).join('');
     const isOpen = openPanels.has(bt.id);
     const guildRankRow = `<div class="guild-rank-row" onclick="event.stopPropagation()">
-      <span class="grr-label">🏆 길드 전체 순위</span>
+      <span class="grr-label">${bt.guildRank?medalEmoji(bt.guildRank):'🏆'} 길드 전체 순위</span>
       <input class="grr-input" type="number" min="1" value="${bt.guildRank||''}" placeholder="-" onchange="setGuildRank('${bt.id}',this.value)">
       <span class="grr-unit">위</span>
     </div>`;
@@ -654,11 +661,17 @@ function renderEntryPage(){
           <span class="collapse-arrow">▼</span>
           <div class="panel-head-title"><span class="tag ${tCls}">${bt.type}</span>${bt.date}</div>
           <span style="font-size:11px;color:var(--t3)">${ranked.length}/${order.length}</span>
-          <span style="font-size:11px;color:var(--t3)">전체 ${bt.guildRank?bt.guildRank+'위':'-위'}</span>
+          <span style="font-size:11px;color:var(--t3)">전체 ${bt.guildRank?medalEmoji(bt.guildRank)+' '+bt.guildRank+'위':'-위'}</span>
         </div>
         <button class="btn btn-sm btn-danger" onclick="deleteBattle(event,'${bt.id}','${bt.date}','${bt.type}')">삭제</button>
       </div>
-      <div class="slots">${guildRankRow}${rows}</div>
+      <div class="slots">
+        ${guildRankRow}
+        <div class="two-col-grid">
+          <div style="border-right:1px solid var(--border)">${rowsLeft}</div>
+          <div>${rowsRight}</div>
+        </div>
+      </div>
       <div class="panel-footer">
         <button class="btn btn-prim" onclick="saveBattlePanel('${bt.id}')">✓ 저장하기</button>
       </div>
@@ -788,16 +801,8 @@ function deleteBattle(e,id,date,type){
 //  MEMBERS
 // ══════════════════════════════════════════════
 function renderMembersPage(){
-  document.getElementById('page-members').innerHTML=`
-    <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;flex-wrap:wrap">
-      <div class="sec-title" style="margin:0">길드원 (순서 = 투력순위)</div>
-      <button class="btn btn-prim btn-sm" onclick="saveMembers()">💾 저장</button>
-      <button class="btn btn-sm" onclick="addMember()">+ 추가</button>
-    </div>
-    <div style="font-size:12px;color:var(--t3);margin-bottom:14px">↑↓ 버튼으로 순서 조정 → 투력순위 자동 변경</div>
-    <div class="member-table">
-      <div class="mt-head"><div>투력순위</div><div>닉네임</div><div>관리</div></div>
-      ${S.members.map((n,i)=>`
+  const mtHead = `<div class="mt-head"><div>투력순위</div><div>닉네임</div><div>관리</div></div>`;
+  const makeRow = (n,i) => `
       <div class="mt-row">
         <div style="font-family:'Noto Sans KR',sans-serif;font-size:13px;font-weight:700;color:var(--text)">${i+1}위</div>
         <div style="display:flex;align-items:center;gap:6px">
@@ -812,7 +817,21 @@ function renderMembersPage(){
           <button class="btn btn-sm" onclick="moveM(${i},1)" ${i===S.members.length-1?'disabled':''}>↓</button>
           <button class="btn btn-sm btn-danger" onclick="removeM(${i})">삭제</button>
         </div>
-      </div>`).join('')}
+      </div>`;
+  const left  = S.members.slice(0,15).map((n,i)=>makeRow(n,i)).join('');
+  const right = S.members.slice(15,30).map((n,i)=>makeRow(n,i+15)).join('');
+  document.getElementById('page-members').innerHTML=`
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;flex-wrap:wrap">
+      <div class="sec-title" style="margin:0">길드원 (순서 = 투력순위)</div>
+      <button class="btn btn-prim btn-sm" onclick="saveMembers()">💾 저장</button>
+      <button class="btn btn-sm" onclick="addMember()">+ 추가</button>
+    </div>
+    <div style="font-size:12px;color:var(--t3);margin-bottom:14px">↑↓ 버튼으로 순서 조정 → 투력순위 자동 변경</div>
+    <div class="member-table">
+      <div class="two-col-grid">
+        <div style="border-right:1px solid var(--border)">${mtHead}${left}</div>
+        <div>${mtHead}${right}</div>
+      </div>
     </div>`;
 }
 function saveMembers(){save();showToast('저장 완료 ✓');renderAll()}
