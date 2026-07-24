@@ -13,7 +13,7 @@
   --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);
   --text:#dde1ed;--t2:#8490aa;--t3:#4a5268;
   --blue:#5b8af5;--blue2:#3d6be0;
-  --green:#3ecf8e;--red:#f06565;--gold:#f5c842;--purple:#9b7ff5;--teal:#2dd4bf;
+  --green:#3ecf8e;--red:#f06565;--gold:#f5c842;--purple:#9b7ff5;--teal:#2dd4bf;--orange:#f5924a;
   --green-bg:rgba(62,207,142,0.08);--red-bg:rgba(240,101,101,0.08);
 }
 *{box-sizing:border-box;margin:0;padding:0}
@@ -86,6 +86,13 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
 .btn-danger:hover{background:rgba(240,101,101,.1);border-color:var(--red)}
 .sec-title{font-size:13px;color:var(--t2);margin-bottom:14px;display:flex;align-items:center;gap:7px}
 .sec-title::before{content:'';width:3px;height:13px;background:var(--blue);border-radius:2px;display:block}
+
+/* 스케줄 */
+.sch-event-card{background:var(--s1);border:1px solid var(--border);border-left:4px solid var(--blue);border-radius:10px;padding:13px 16px;margin-bottom:10px;display:flex;gap:12px;align-items:flex-start}
+.sch-event-icon{font-size:19px;line-height:1;margin-top:1px}
+.sch-event-title{font-size:14px;font-weight:600;color:var(--text)}
+.sch-event-date{font-size:11.5px;color:var(--t3);margin-top:2px}
+.sch-event-desc{font-size:12.5px;color:var(--t2);margin-top:5px;line-height:1.6}
 
 /* 입력 페이지 */
 .battle-grid{display:flex;flex-direction:column;gap:12px}
@@ -243,6 +250,7 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
     <button class="nav-tab on" onclick="goPage('dashboard')">📊 현황판</button>
     <button class="nav-tab" onclick="goPage('entry')">✏️ 결과 입력</button>
     <button class="nav-tab" onclick="goPage('members')">👥 길드원</button>
+    <button class="nav-tab" onclick="goPage('schedule')">🗓️ 스케줄</button>
   </div>
   <button class="nav-hamburger" id="nav-hamburger" onclick="toggleHamburger()" aria-label="메뉴">
     <span></span><span></span><span></span>
@@ -254,11 +262,13 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
   <button class="nav-tab on" onclick="goPage('dashboard')">📊 현황판</button>
   <button class="nav-tab" onclick="goPage('entry')">✏️ 결과 입력</button>
   <button class="nav-tab" onclick="goPage('members')">👥 길드원</button>
+  <button class="nav-tab" onclick="goPage('schedule')">🗓️ 스케줄</button>
 </div>
 
 <div id="page-dashboard" class="page on"></div>
 <div id="page-entry" class="page"></div>
 <div id="page-members" class="page"></div>
+<div id="page-schedule" class="page"></div>
 
 <!-- 달력 모달 -->
 <div class="cal-modal-bg" id="cal-modal-bg" onclick="calBgClick(event)">
@@ -954,12 +964,12 @@ function showToast(msg){
   t.textContent=msg;t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'),2000);
 }
-const PAGE_LABELS = {dashboard:'현황판',entry:'결과 입력',members:'길드원'};
+const PAGE_LABELS = {dashboard:'현황판',entry:'결과 입력',members:'길드원',schedule:'스케줄'};
 const PW = '0318';
 let _authenticated = false;
 let _pendingPage = null;
 function goPage(name){
-  if(name !== 'dashboard' && !_authenticated){
+  if(name !== 'dashboard' && name !== 'schedule' && !_authenticated){
     _pendingPage = name;
     document.getElementById('pw-input').value='';
     document.getElementById('pw-error').textContent='';
@@ -983,6 +993,7 @@ function _showPage(name){
   if(name==='dashboard')renderDashboard();
   if(name==='entry')renderEntryPage();
   if(name==='members')renderMembersPage();
+  if(name==='schedule')renderSchedulePage();
 }
 function closePwModal(){
   document.getElementById('pw-modal-bg').classList.remove('open');
@@ -1016,6 +1027,54 @@ function closeHamburger(){
 function renderAll(){
   const cur=document.querySelector('.nav-tab.on')?.getAttribute('onclick').match(/'(\w+)'/)?.[1]||'dashboard';
   goPage(cur);
+}
+
+// ══════════════════════════════════════════════
+//  SCHEDULE
+// ══════════════════════════════════════════════
+const SCH_TYPE_COLOR = {
+  coupon:'--gold', hero:'--purple', buff:'--red', attendance:'--teal',
+  dropup:'--green', event:'--blue', pvp:'--orange',
+};
+const SCHEDULE_EVENTS = [
+  {id:1,  type:'coupon',     icon:'🎟️', title:'쿠폰 gift300 (동료 300뽑기권 지급)', start:'2026-07-23', end:'2026-09-02', desc:'쿠폰 번호 gift300 입력 시 동료 300뽑기권을 지급합니다. 9월 2일까지 사용 가능합니다.'},
+  {id:2,  type:'hero',       icon:'🆕', title:'신규 동료 특별 패시브 스킬 이벤트',      start:'2026-07-23', end:'2026-09-03', desc:'세부사항은 동료탭에서 확인하세요. 9월 3일까지 진행됩니다.'},
+  {id:3,  type:'buff',       icon:'🔥', title:'매일 버닝부스터',                       start:'2026-07-23', end:'2026-08-12', desc:'8월 12일까지 매일 진행됩니다.'},
+  {id:4,  type:'attendance', icon:'📅', title:'월간 출석체크',                        start:'2026-08-01', end:'2026-08-28', desc:'8월 1일부터 28일간(8월 28일까지) 월간 출석체크가 진행됩니다.'},
+  {id:5,  type:'buff',       icon:'🔥', title:'로미오와 줄리엣 파티퀘스트 버닝UP',      start:'2026-07-23', end:'2026-08-05', desc:'8월 5일까지 로미오와 줄리엣 파티퀘스트 버닝업이 진행됩니다.'},
+  {id:6,  type:'event',      icon:'💻', title:'PC클라 접속 이벤트',                    start:'2026-07-23', end:'2026-08-12', desc:'7월 23일부터 8월 12일까지 PC클라이언트 접속 이벤트가 진행됩니다.'},
+  {id:7,  type:'event',      icon:'🗿', title:'여명의 발자취 증표 이벤트',             start:'2026-07-27', end:null,          desc:'7월 27일부터 진행됩니다.'},
+  {id:8,  type:'pvp',        icon:'⚔️', title:'콜로세움 오픈',                         start:'2026-07-28', end:null,          desc:'7월 28일부터 콜로세움이 시작됩니다.'},
+  {id:9,  type:'dropup',     icon:'📈', title:'자쿰/혼테일 드랍업',                    start:'2026-08-03', end:null,          desc:'8월 3일부터 자쿰/혼테일 드랍률이 증가합니다.'},
+  {id:10, type:'hero',       icon:'🌱', title:'신규 캐릭터 성장 이벤트 1',             start:'2026-07-23', end:'2026-09-23', desc:'7월 23일부터 9월 23일까지 진행됩니다.'},
+  {id:11, type:'hero',       icon:'🌱', title:'신규 캐릭터 성장 이벤트 2',             start:'2026-07-23', end:'2026-09-23', desc:'7월 23일부터 9월 23일까지 진행됩니다.'},
+  {id:12, type:'event',      icon:'🍬', title:'달콤한 큐브 축제',                      start:'2026-07-23', end:'2026-09-02', desc:'7월 23일부터 9월 2일까지 진행됩니다.'},
+  {id:13, type:'attendance', icon:'📅', title:'시그너스 15일 출석 이벤트',             start:'2026-07-23', end:'2026-08-12', desc:'8월 12일까지 진행되는 시그너스 15일 출석 이벤트입니다.'},
+  {id:14, type:'event',      icon:'🛡️', title:'기사단의 펜던트 강화 이벤트',           start:'2026-07-23', end:'2026-09-02', desc:'9월 2일까지 진행됩니다.'},
+  {id:15, type:'event',      icon:'🏪', title:'시그너스 상점',                         start:'2026-07-23', end:'2026-09-04', desc:'9월 4일까지 운영되는 시그너스 상점입니다.'},
+];
+function _schFmtDate(dateStr){
+  const [yy,mm,dd] = dateStr.split('-');
+  return parseInt(mm)+'월 '+parseInt(dd)+'일';
+}
+function renderSchedulePage(){
+  const sortedEvents = [...SCHEDULE_EVENTS].sort((a,b)=>a.start<b.start?-1:1);
+  const listHtml = sortedEvents.map(e=>{
+    const dateRange = e.start===e.end ? _schFmtDate(e.start) : (_schFmtDate(e.start)+' ~ '+(e.end?_schFmtDate(e.end):'진행중'));
+    return `<div class="sch-event-card" style="border-left-color:var(${SCH_TYPE_COLOR[e.type]})">
+      <div class="sch-event-icon">${e.icon}</div>
+      <div>
+        <div class="sch-event-title">${e.title}</div>
+        <div class="sch-event-date">${dateRange}</div>
+        <div class="sch-event-desc">${e.desc}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('page-schedule').innerHTML = `
+    <div class="sec-title" style="margin-bottom:18px">이벤트 스케줄</div>
+    ${listHtml}
+  `;
 }
 
 fbInit();
